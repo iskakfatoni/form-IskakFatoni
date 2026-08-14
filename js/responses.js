@@ -30,60 +30,70 @@ class ResponsesDashboard {
 
   bindEvents() {
     // Export to Excel Button
-    this.btnExportExcel.addEventListener('click', () => {
-      if (this.currentForm && this.responses.length > 0) {
-        window.ExcelExporter.exportFormResponses(this.currentForm, this.responses);
-      } else {
-        window.app.showToast('Belum ada data tanggapan untuk diekspor', 'error');
-      }
-    });
+    if (this.btnExportExcel) {
+      this.btnExportExcel.addEventListener('click', () => {
+        if (this.currentForm && this.responses.length > 0) {
+          window.ExcelExporter.exportFormResponses(this.currentForm, this.responses);
+        } else {
+          window.app.showToast('Belum ada data tanggapan untuk diekspor', 'error');
+        }
+      });
+    }
 
     // Share Form Button
-    this.btnShareForm.addEventListener('click', () => {
-      if (this.currentForm) {
-        window.app.openShareModal(this.currentForm.id);
-      }
-    });
+    if (this.btnShareForm) {
+      this.btnShareForm.addEventListener('click', () => {
+        if (this.currentForm) {
+          window.app.openShareModal(this.currentForm.id);
+        }
+      });
+    }
 
     // Edit Form Button
-    this.btnEditForm.addEventListener('click', () => {
-      if (this.currentForm) {
-        window.location.hash = `#/builder/${this.currentForm.id}`;
-      }
-    });
+    if (this.btnEditForm) {
+      this.btnEditForm.addEventListener('click', () => {
+        if (this.currentForm) {
+          window.location.hash = `#/builder/${this.currentForm.id}`;
+        }
+      });
+    }
 
     // Clear All Responses Button
-    this.btnClearAll.addEventListener('click', async () => {
-      if (!this.currentForm || this.responses.length === 0) return;
-      if (confirm(`Apakah Anda yakin ingin menghapus seluruh (${this.responses.length}) tanggapan dari formulir ini? Tindakan ini tidak dapat dibatalkan.`)) {
-        await window.formStorage.clearResponsesByFormId(this.currentForm.id);
-        window.app.showToast('Seluruh tanggapan berhasil dihapus', 'info');
-        this.loadDashboard(this.currentForm.id);
-      }
-    });
+    if (this.btnClearAll) {
+      this.btnClearAll.addEventListener('click', async () => {
+        if (!this.currentForm || this.responses.length === 0) return;
+        if (confirm(`Apakah Anda yakin ingin menghapus seluruh (${this.responses.length}) tanggapan dari formulir ini? Tindakan ini tidak dapat dibatalkan.`)) {
+          await window.formStorage.clearResponsesByFormId(this.currentForm.id);
+          window.app.showToast('Seluruh tanggapan berhasil dihapus', 'info');
+          this.loadDashboard(this.currentForm.id);
+        }
+      });
+    }
 
     // Search in responses
-    this.searchInput.addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase().trim();
-      if (!q) {
-        this.filteredResponses = [...this.responses];
-      } else {
-        this.filteredResponses = this.responses.filter(r => {
-          // Search in submittedAt or any answer
-          if (r.submittedAt && r.submittedAt.toLowerCase().includes(q)) return true;
-          for (const key in r.answers) {
-            const val = r.answers[key];
-            if (Array.isArray(val)) {
-              if (val.some(v => String(v).toLowerCase().includes(q))) return true;
-            } else if (val && String(val).toLowerCase().includes(q)) {
-              return true;
+    if (this.searchInput) {
+      this.searchInput.addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase().trim();
+        if (!q) {
+          this.filteredResponses = [...this.responses];
+        } else {
+          this.filteredResponses = this.responses.filter(r => {
+            // Search in submittedAt or any answer
+            if (r.submittedAt && r.submittedAt.toLowerCase().includes(q)) return true;
+            for (const key in r.answers) {
+              const val = r.answers[key];
+              if (Array.isArray(val)) {
+                if (val.some(v => String(v).toLowerCase().includes(q))) return true;
+              } else if (val && String(val).toLowerCase().includes(q)) {
+                return true;
+              }
             }
-          }
-          return false;
-        });
-      }
-      this.renderTableRows();
-    });
+            return false;
+          });
+        }
+        this.renderTableRows();
+      });
+    }
   }
 
   async loadDashboard(formId) {

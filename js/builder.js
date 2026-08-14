@@ -34,9 +34,12 @@ class FormBuilder {
 
   bindEvents() {
     // Add Question Main Button
-    document.getElementById('btn-add-question').addEventListener('click', () => {
-      this.addQuestion('text');
-    });
+    const btnAddQ = document.getElementById('btn-add-question');
+    if (btnAddQ) {
+      btnAddQ.addEventListener('click', () => {
+        this.addQuestion('text');
+      });
+    }
 
     // Add Section Button
     const btnAddSection = document.getElementById('btn-add-section');
@@ -55,45 +58,61 @@ class FormBuilder {
     });
 
     // Color Swatches
-    this.themeColorSwatches.forEach(swatch => {
-      swatch.addEventListener('click', () => {
-        this.themeColorSwatches.forEach(s => s.classList.remove('active'));
-        swatch.classList.add('active');
-        const color = swatch.dataset.color;
-        this.setThemeColor(color);
+    if (this.themeColorSwatches) {
+      this.themeColorSwatches.forEach(swatch => {
+        swatch.addEventListener('click', () => {
+          this.themeColorSwatches.forEach(s => s.classList.remove('active'));
+          swatch.classList.add('active');
+          const color = swatch.dataset.color;
+          this.setThemeColor(color);
+        });
       });
-    });
+    }
 
     // Save Form Button
-    document.getElementById('btn-save-form').addEventListener('click', () => {
-      this.saveCurrentForm();
-    });
+    const btnSave = document.getElementById('btn-save-form');
+    if (btnSave) {
+      btnSave.addEventListener('click', () => {
+        this.saveCurrentForm();
+      });
+    }
 
     // Preview Button
-    document.getElementById('btn-preview-form').addEventListener('click', () => {
-      if (this.currentForm && this.currentForm.id) {
-        window.location.hash = `#/view/${this.currentForm.id}`;
-      } else {
-        this.saveCurrentForm().then(saved => {
-          if (saved) window.location.hash = `#/view/${saved.id}`;
-        });
-      }
-    });
+    const btnPreview = document.getElementById('btn-preview-form');
+    if (btnPreview) {
+      btnPreview.addEventListener('click', () => {
+        if (this.currentForm && this.currentForm.id) {
+          window.location.hash = `#/view/${this.currentForm.id}`;
+        } else {
+          this.saveCurrentForm().then(saved => {
+            if (saved) window.location.hash = `#/view/${saved.id}`;
+          });
+        }
+      });
+    }
 
     // Responses Tab Link inside builder
-    this.responsesTabLink.addEventListener('click', () => {
-      if (this.currentForm && this.currentForm.id) {
-        window.location.hash = `#/responses/${this.currentForm.id}`;
-      }
-    });
+    if (this.responsesTabLink) {
+      this.responsesTabLink.addEventListener('click', () => {
+        if (this.currentForm && this.currentForm.id) {
+          window.location.hash = `#/responses/${this.currentForm.id}`;
+        }
+      });
+    }
 
     // Builder Tabs (Questions vs Settings)
-    document.getElementById('tab-btn-questions').addEventListener('click', () => {
-      this.switchTab('questions');
-    });
-    document.getElementById('tab-btn-settings').addEventListener('click', () => {
-      this.switchTab('settings');
-    });
+    const tabQuestions = document.getElementById('tab-btn-questions');
+    if (tabQuestions) {
+      tabQuestions.addEventListener('click', () => {
+        this.switchTab('questions');
+      });
+    }
+    const tabSettings = document.getElementById('tab-btn-settings');
+    if (tabSettings) {
+      tabSettings.addEventListener('click', () => {
+        this.switchTab('settings');
+      });
+    }
   }
 
   switchTab(tab) {

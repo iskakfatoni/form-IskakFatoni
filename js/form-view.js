@@ -38,10 +38,12 @@ class FormViewer {
   }
 
   bindEvents() {
-    this.formElement.addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.handleSubmit();
-    });
+    if (this.formElement) {
+      this.formElement.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleSubmit();
+      });
+    }
 
     if (this.btnNextStep) {
       this.btnNextStep.addEventListener('click', () => {
@@ -55,18 +57,23 @@ class FormViewer {
       });
     }
 
-    document.getElementById('btn-reset-form').addEventListener('click', () => {
-      if (confirm('Apakah Anda yakin ingin mengosongkan seluruh jawaban?')) {
-        this.resetAnswers();
-      }
-    });
+    const btnReset = document.getElementById('btn-reset-form');
+    if (btnReset) {
+      btnReset.addEventListener('click', () => {
+        if (confirm('Apakah Anda yakin ingin mengosongkan seluruh jawaban?')) {
+          this.resetAnswers();
+        }
+      });
+    }
 
-    this.btnSubmitAnother.addEventListener('click', () => {
-      this.resetAnswers();
-      this.successCard.classList.add('hidden');
-      this.formElement.classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    if (this.btnSubmitAnother) {
+      this.btnSubmitAnother.addEventListener('click', () => {
+        this.resetAnswers();
+        if (this.successCard) this.successCard.classList.add('hidden');
+        if (this.formElement) this.formElement.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
   }
 
   async loadForm(formId) {

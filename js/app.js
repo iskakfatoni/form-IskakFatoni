@@ -390,7 +390,16 @@ class App {
   }
 }
 
-// Bootstrap Application on DOM Ready
-document.addEventListener('DOMContentLoaded', () => {
-  window.app = new App();
-});
+// Robust Bootstrap Application
+function initFormcraftApp() {
+  if (!window.app) {
+    window.app = new App();
+    console.log('[Formcraft] Application initialized successfully.');
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initFormcraftApp);
+} else {
+  initFormcraftApp();
+}
