@@ -350,15 +350,15 @@ class FormBuilder {
     }
 
     // 2. Header Card in Questions Tab
-    if (this.headerBannerPreview && this.headerBannerImg && this.btnAddHeaderBanner) {
+    if (this.headerBannerPreview && this.headerBannerImg) {
       if (bannerUrl) {
         this.headerBannerPreview.classList.remove('hidden');
         this.headerBannerImg.src = bannerUrl;
-        this.btnAddHeaderBanner.classList.add('hidden');
+        if (this.btnAddHeaderBanner) this.btnAddHeaderBanner.classList.add('hidden');
       } else {
         this.headerBannerPreview.classList.add('hidden');
         this.headerBannerImg.src = '';
-        this.btnAddHeaderBanner.classList.remove('hidden');
+        if (this.btnAddHeaderBanner) this.btnAddHeaderBanner.classList.remove('hidden');
       }
     }
 

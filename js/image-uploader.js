@@ -123,26 +123,33 @@ class ImageUploaderEngine {
     const compressed = await this.compressImage(file, { maxWidth, quality: options.quality });
     console.log(`[ImageEngine] Gambar dikompres: ${(compressed.originalSize / 1024).toFixed(1)} KB -> ${(compressed.compressedSize / 1024).toFixed(1)} KB (${compressed.width}x${compressed.height}px)`);
 
-    // 2. Try Upload to Firebase Storage
+    // 2. Try Upload to Firebase Storage with strict 3.5s timeout to prevent hanging
     if (this.storage) {
       try {
         const fileExt = compressed.blob.type === 'image/webp' ? 'webp' : 'jpg';
         const fileName = `${context}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${fileExt}`;
         const storageRef = this.storage.ref().child(`forms/${formId}/images/${fileName}`);
 
-        const snapshot = await storageRef.put(compressed.blob, {
-          contentType: compressed.blob.type,
-          cacheControl: 'public,max-age=31536000'
+        const uploadPromise = async () => {
+          const snapshot = await storageRef.put(compressed.blob, {
+            contentType: compressed.blob.type,
+            cacheControl: 'public,max-age=31536000'
+          });
+          return await snapshot.ref.getDownloadURL();
+        };
+
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Firebase Storage timeout')), 3500);
         });
 
-        const downloadUrl = await snapshot.ref.getDownloadURL();
+        const downloadUrl = await Promise.race([uploadPromise(), timeoutPromise]);
         return {
           url: downloadUrl,
           size: compressed.compressedSize,
           type: 'cloud'
         };
       } catch (storageErr) {
-        console.warn('[ImageEngine] Firebase Storage upload error (fallback to compressed Base64):', storageErr);
+        console.warn('[ImageEngine] Firebase Storage upload error/timeout (fallback to compressed Data URL):', storageErr);
         // Fallback directly to compressed Data URL
         return {
           url: compressed.dataUrl,
