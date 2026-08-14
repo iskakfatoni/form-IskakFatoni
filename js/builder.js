@@ -336,7 +336,7 @@ class FormBuilder {
           ${options.map((opt, optIdx) => `
             <div class="option-row" data-opt-index="${optIdx}">
               <i data-lucide="${icon}" class="option-type-icon"></i>
-              <input type="text" class="input-option-text" value="${this.escapeHtml(opt)}" placeholder="Nama opsi...">
+              <input type="text" class="input-option-text" value="${this.escapeHtml(opt)}" placeholder="Nama opsi (Bisa paste list Excel/Sheets)...">
               ${options.length > 1 ? `
                 <button type="button" class="btn-remove-option" title="Hapus Opsi">
                   <i data-lucide="x"></i>
@@ -455,12 +455,56 @@ class FormBuilder {
       q.required = e.target.checked;
     });
 
-    // Options row modifications
+    // Options row modifications (with Excel / Google Sheets multi-line paste support)
     const optInputs = card.querySelectorAll('.input-option-text');
     optInputs.forEach((input, optIdx) => {
       input.addEventListener('input', (e) => {
         if (!q.options) q.options = [];
         q.options[optIdx] = e.target.value;
+      });
+
+      // Paste multiple items from Excel / Google Sheets
+      input.addEventListener('paste', (e) => {
+        const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+        if (pasteData && (pasteData.includes('\n') || pasteData.includes('\r'))) {
+          e.preventDefault();
+          const lines = pasteData
+            .split(/\r?\n/)
+            .map(l => l.trim())
+            .filter(l => l.length > 0);
+
+          if (lines.length > 0) {
+            if (!q.options) q.options = [];
+            // Replace current option with first line, and insert remaining lines
+            q.options.splice(optIdx, 1, ...lines);
+            this.renderQuestions();
+            if (window.app && typeof window.app.showToast === 'function') {
+              window.app.showToast(`Berhasil menempelkan ${lines.length} opsi dari Excel/Sheets!`, 'success');
+            }
+          }
+        }
+      });
+
+      // Press Enter to create a new option row below and focus it
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (!q.options) q.options = [];
+          q.options.splice(optIdx + 1, 0, `Opsi ${q.options.length + 1}`);
+          this.renderQuestions();
+
+          // Focus the next option input
+          setTimeout(() => {
+            const currentCard = document.querySelector(`[data-question-id="${q.id}"]`);
+            if (currentCard) {
+              const inputs = currentCard.querySelectorAll('.input-option-text');
+              if (inputs[optIdx + 1]) {
+                inputs[optIdx + 1].focus();
+                inputs[optIdx + 1].select();
+              }
+            }
+          }, 60);
+        }
       });
     });
 
