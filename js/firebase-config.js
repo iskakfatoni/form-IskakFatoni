@@ -64,9 +64,12 @@ class FirebaseManager {
           this.app = firebase.app();
         }
         this.db = firebase.firestore();
+        if (typeof firebase.auth === 'function') {
+          this.auth = firebase.auth();
+        }
         this.isConfigured = true;
         this.updateStatusUI(true);
-        console.log('Firebase Cloud Firestore berhasil diinisialisasi untuk project:', this.config.projectId);
+        console.log('Firebase Cloud Firestore & Auth berhasil diinisialisasi untuk project:', this.config.projectId);
         return true;
       }
     } catch (error) {

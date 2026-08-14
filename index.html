@@ -19,6 +19,7 @@
 
   <!-- Firebase SDK (Modular via CDN Compat for seamless static browser execution) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <!-- Application Stylesheets -->
@@ -58,6 +59,14 @@
       </nav>
 
       <div class="nav-actions">
+        <!-- Auth Status / User Profile Button -->
+        <button id="nav-user-auth-pill" class="user-auth-pill logged-out" title="Klik untuk Masuk / Keluar">
+          <span id="nav-user-auth-avatar" class="nav-avatar-icon">
+            <i data-lucide="log-in"></i>
+          </span>
+          <span id="nav-user-auth-name" class="nav-user-name">Masuk Admin</span>
+        </button>
+
         <button id="btn-db-status" class="status-badge status-local" title="Status Database: Klik untuk konfigurasi Firebase">
           <span class="pulse-dot"></span>
           <span id="db-status-text">Mode Lokal</span>
@@ -77,32 +86,124 @@
 
     <!-- 1. DASHBOARD VIEW -->
     <section id="view-dashboard" class="view-section active">
-      <div class="dashboard-hero glass-card">
-        <div class="hero-content">
-          <h1 class="hero-title">Kelola & Buat Formulir <span class="gradient-text">Dengan Mudah</span></h1>
-          <p class="hero-desc">
-            Buat formulir kustom interaktif, bagikan tautan kepada responden, simpan data ke Firebase Cloud Firestore secara realtime, dan unduh data jawaban langsung dalam format Excel (.xlsx).
-          </p>
-          <div class="hero-cta-group">
-            <button class="btn btn-primary" onclick="window.location.hash = '#/builder'">
-              <i data-lucide="plus"></i>
-              <span>Buat Formulir Baru</span>
-            </button>
-            <button class="btn btn-secondary" id="btn-quick-setup">
-              <i data-lucide="database"></i>
-              <span>Hubungkan Firebase</span>
-            </button>
+      <div class="dashboard-hero-container">
+        <!-- Left Hero Content Info -->
+        <div class="dashboard-hero glass-card">
+          <div class="hero-content">
+            <h1 class="hero-title">Kelola & Buat Formulir <span class="gradient-text">Dengan Mudah</span></h1>
+            <p class="hero-desc">
+              Buat formulir kustom interaktif, bagikan tautan kepada responden, simpan data ke Firebase Cloud Firestore secara realtime, dan unduh data jawaban langsung dalam format Excel (.xlsx).
+            </p>
+            <div class="hero-cta-group">
+              <button class="btn btn-primary" onclick="window.location.hash = '#/builder'">
+                <i data-lucide="plus"></i>
+                <span>Buat Formulir Baru</span>
+              </button>
+              <button class="btn btn-secondary" id="btn-quick-setup">
+                <i data-lucide="database"></i>
+                <span>Hubungkan Firebase</span>
+              </button>
+            </div>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-box glass">
+              <div class="stat-number" id="stat-total-forms">0</div>
+              <div class="stat-label">Total Formulir</div>
+            </div>
+            <div class="stat-box glass">
+              <div class="stat-number" id="stat-total-responses">0</div>
+              <div class="stat-label">Total Respon</div>
+            </div>
           </div>
         </div>
-        <div class="hero-stats">
-          <div class="stat-box glass">
-            <div class="stat-number" id="stat-total-forms">0</div>
-            <div class="stat-label">Total Formulir</div>
+
+        <!-- Right Hero Login / Auth Card -->
+        <div class="hero-auth-container glass-card">
+          
+          <!-- State 1: Logged Out Card -->
+          <div id="hero-auth-logged-out" class="hero-auth-box">
+            <div class="auth-box-header">
+              <div class="auth-icon-badge">
+                <i data-lucide="lock"></i>
+              </div>
+              <div>
+                <h3 class="auth-box-title">Akses Admin & Pengelola</h3>
+                <p class="auth-box-subtitle">Masuk untuk mengelola formulir & respon</p>
+              </div>
+            </div>
+
+            <!-- Google Login Button -->
+            <button type="button" id="btn-hero-google-login" class="btn btn-google-auth">
+              <svg class="google-svg-icon" viewBox="0 0 24 24">
+                <path fill="#EA4335" d="M12 5c1.56 0 2.97.57 4.08 1.5l3.05-3.05C17.27 1.69 14.81 1 12 1 7.52 1 3.73 3.56 1.87 7.29l3.71 2.88C6.46 7.23 8.99 5 12 5z"/>
+                <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.71 2.88c2.16-1.99 3.71-4.93 3.71-8.7z"/>
+                <path fill="#FBBC05" d="M5.58 14.83c-.23-.69-.36-1.42-.36-2.18s.13-1.49.36-2.18L1.87 7.59C1.1 9.13.67 10.86.67 12.65s.43 3.52 1.2 5.06l3.71-2.88z"/>
+                <path fill="#34A853" d="M12 23.65c3.24 0 5.95-1.08 7.93-2.93l-3.71-2.88c-1.07.72-2.44 1.15-4.22 1.15-3.01 0-5.54-2.23-6.42-5.17L1.87 16.7C3.73 20.44 7.52 23.65 12 23.65z"/>
+              </svg>
+              <span>Masuk dengan Google</span>
+            </button>
+
+            <div class="auth-divider">
+              <span>atau Masuk dengan Email</span>
+            </div>
+
+            <!-- Firebase Email & Password Auth Form -->
+            <form id="hero-email-login-form" class="auth-email-form">
+              <div class="auth-input-group">
+                <div class="auth-field-wrap">
+                  <i data-lucide="mail" class="input-icon"></i>
+                  <input type="email" id="auth-email-input" class="input-text auth-input" placeholder="Alamat Email..." value="iskakfatoni@gmail.com" autocomplete="email" required>
+                </div>
+                <div class="auth-field-wrap">
+                  <i data-lucide="lock" class="input-icon"></i>
+                  <input type="password" id="auth-password-input" class="input-text auth-input" placeholder="Kata Sandi Firebase..." minlength="6" autocomplete="current-password" required>
+                </div>
+              </div>
+
+              <div class="auth-submit-row">
+                <button type="submit" id="btn-auth-submit" class="btn btn-primary btn-block">
+                  <i data-lucide="log-in" id="auth-submit-icon"></i>
+                  <span id="auth-submit-label">Masuk dengan Email</span>
+                </button>
+              </div>
+
+              <div class="auth-toggle-row">
+                <span id="auth-toggle-text">Belum punya akun?</span>
+                <button type="button" id="btn-auth-mode-toggle" class="btn-link">Daftar Akun Baru</button>
+              </div>
+            </form>
           </div>
-          <div class="stat-box glass">
-            <div class="stat-number" id="stat-total-responses">0</div>
-            <div class="stat-label">Total Respon</div>
+
+          <!-- State 2: Logged In Card -->
+          <div id="hero-auth-logged-in" class="hero-auth-box hidden">
+            <div class="auth-profile-card">
+              <div class="auth-profile-top">
+                <div id="hero-user-avatar" class="hero-user-avatar">
+                  <i data-lucide="shield-check"></i>
+                </div>
+                <div class="hero-user-info">
+                  <div class="verified-badge">
+                    <span class="pulse-dot"></span>
+                    <span>Admin Terverifikasi</span>
+                  </div>
+                  <h3 id="hero-user-name" class="hero-user-name">Iskak Fatoni</h3>
+                  <p id="hero-user-email" class="hero-user-email">iskakfatoni@gmail.com</p>
+                </div>
+              </div>
+
+              <div class="auth-profile-actions">
+                <button class="btn btn-secondary btn-sm btn-block" onclick="window.location.hash = '#/builder'">
+                  <i data-lucide="plus-circle"></i>
+                  <span>Buat Form Baru</span>
+                </button>
+                <button type="button" id="btn-hero-logout" class="btn btn-ghost btn-sm btn-block text-danger">
+                  <i data-lucide="log-out"></i>
+                  <span>Keluar (Logout)</span>
+                </button>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
 
@@ -187,17 +288,23 @@
             </div>
           </div>
 
-          <!-- Dynamic Questions List Container -->
+          <!-- Dynamic Questions & Sections List Container -->
           <div id="questions-container" class="questions-list">
-            <!-- Questions rendered via JS -->
+            <!-- Questions and Sections rendered via JS -->
           </div>
 
-          <!-- Add Question Floating / Bottom Bar -->
+          <!-- Add Question & Section Floating / Bottom Bar -->
           <div class="add-question-bar glass">
-            <button class="btn-add-q" id="btn-add-question" title="Tambah Pertanyaan Baru">
-              <i data-lucide="plus-circle"></i>
-              <span>Tambah Pertanyaan</span>
-            </button>
+            <div class="main-add-actions">
+              <button class="btn-add-q" id="btn-add-question" title="Tambah Pertanyaan Baru">
+                <i data-lucide="plus-circle"></i>
+                <span>Tambah Pertanyaan</span>
+              </button>
+              <button class="btn-add-sec" id="btn-add-section" title="Tambah Bagian/Halaman Baru">
+                <i data-lucide="layers"></i>
+                <span>Tambah Bagian</span>
+              </button>
+            </div>
             <div class="quick-type-picker">
               <span class="picker-label">Pilih Cepat:</span>
               <button class="type-pill" data-type="text"><i data-lucide="type"></i> Teks</button>
@@ -282,15 +389,39 @@
 
           <!-- Questions Live Form Body -->
           <form id="form-live-element" class="form-live-body" onsubmit="return false;">
+            
+            <!-- Section Progress Bar (Visible if form has multiple sections) -->
+            <div id="form-section-progress-wrap" class="section-progress-wrap glass-card hidden">
+              <div class="progress-info-row">
+                <span id="section-progress-text" class="progress-step-text">Bagian 1 dari 2</span>
+                <span id="section-progress-percent" class="progress-pct-text">50%</span>
+              </div>
+              <div class="progress-track">
+                <div id="section-progress-bar" class="progress-fill" style="width: 50%;"></div>
+              </div>
+            </div>
+
+            <!-- Questions Container (Groups by Section) -->
             <div id="form-view-questions" class="form-view-questions-list">
               <!-- Rendered via JS -->
             </div>
 
+            <!-- Form Multi-Step Navigation & Submit Buttons -->
             <div class="form-submit-section glass-card">
-              <button type="submit" id="btn-submit-response" class="btn btn-primary btn-lg">
-                <i data-lucide="send"></i>
-                <span>Kirim Formulir</span>
-              </button>
+              <div class="step-nav-buttons">
+                <button type="button" id="btn-prev-step" class="btn btn-secondary hidden">
+                  <i data-lucide="chevron-left"></i>
+                  <span>Kembali</span>
+                </button>
+                <button type="button" id="btn-next-step" class="btn btn-primary hidden">
+                  <span>Berikutnya</span>
+                  <i data-lucide="chevron-right"></i>
+                </button>
+                <button type="submit" id="btn-submit-response" class="btn btn-primary btn-lg">
+                  <i data-lucide="send"></i>
+                  <span>Kirim Formulir</span>
+                </button>
+              </div>
               <button type="button" id="btn-reset-form" class="btn btn-ghost btn-sm">
                 Kosongkan Formulir
               </button>
@@ -538,6 +669,7 @@
   <!-- Application Logic Modules -->
   <script src="js/firebase-config.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/export-excel.js"></script>
   <script src="js/builder.js"></script>
   <script src="js/form-view.js"></script>

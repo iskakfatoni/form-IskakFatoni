@@ -1,12 +1,15 @@
 /**
  * FORMCRAFT - Form Builder Logic
- * Handles dynamic question card creation, type switching, options editor, and saving to Firestore.
+ * Handles dynamic question card creation, Section management, Drag and Drop reordering,
+ * type switching, options editor, and saving to Firestore/LocalStorage.
  */
 
 class FormBuilder {
   constructor() {
     this.currentForm = null;
+    this.sections = [];
     this.questions = [];
+    this.draggedQuestionId = null;
     this.initElements();
     this.bindEvents();
   }
@@ -34,9 +37,17 @@ class FormBuilder {
       this.addQuestion('text');
     });
 
+    // Add Section Button
+    const btnAddSection = document.getElementById('btn-add-section');
+    if (btnAddSection) {
+      btnAddSection.addEventListener('click', () => {
+        this.addSection();
+      });
+    }
+
     // Quick Type Pills
     document.querySelectorAll('.type-pill').forEach(pill => {
-      pill.addEventListener('click', (e) => {
+      pill.addEventListener('click', () => {
         const type = pill.dataset.type;
         this.addQuestion(type);
       });
@@ -101,6 +112,7 @@ class FormBuilder {
     this.switchTab('questions');
     if (!formId) {
       // Create new blank form
+      const defaultSecId = 'sec_' + Date.now();
       this.currentForm = {
         id: null,
         title: 'Formulir Tanpa Judul',
@@ -111,11 +123,20 @@ class FormBuilder {
         allowMultiple: true,
         isActive: true,
         responseCount: 0,
+        sections: [
+          {
+            id: defaultSecId,
+            title: 'Bagian 1',
+            description: ''
+          }
+        ],
         questions: []
       };
+      this.sections = this.currentForm.sections;
       this.questions = [
         {
           id: 'q_' + Date.now(),
+          sectionId: defaultSecId,
           type: 'text',
           title: 'Pertanyaan Tanpa Judul',
           required: false
@@ -131,7 +152,27 @@ class FormBuilder {
     window.formStorage.getFormById(formId).then(form => {
       if (form) {
         this.currentForm = form;
-        this.questions = form.questions || [];
+        
+        // Ensure sections array exists
+        if (!form.sections || form.sections.length === 0) {
+          const defaultSecId = 'sec_1';
+          this.sections = [
+            {
+              id: defaultSecId,
+              title: form.title || 'Bagian 1',
+              description: form.description || ''
+            }
+          ];
+        } else {
+          this.sections = form.sections;
+        }
+
+        const firstSecId = this.sections[0].id;
+        this.questions = (form.questions || []).map(q => {
+          if (!q.sectionId) q.sectionId = firstSecId;
+          return q;
+        });
+
         this.renderForm();
         this.statusBadge.textContent = 'Edit Formulir';
         this.responsesTabLink.style.display = 'inline-flex';
@@ -164,9 +205,23 @@ class FormBuilder {
 
   renderQuestions() {
     this.questionsContainer.innerHTML = '';
-    this.questions.forEach((q, index) => {
-      const card = this.createQuestionCardElement(q, index);
-      this.questionsContainer.appendChild(card);
+    const totalSections = this.sections.length;
+
+    this.sections.forEach((sec, secIdx) => {
+      // If there are multiple sections, render a section header card (for section 2 and above, or all if multi-section)
+      if (totalSections > 1) {
+        const secCard = this.createSectionCardElement(sec, secIdx, totalSections);
+        this.questionsContainer.appendChild(secCard);
+      }
+
+      // Render questions for this section
+      const sectionQuestions = this.questions.filter(q => q.sectionId === sec.id);
+      
+      sectionQuestions.forEach(q => {
+        const globalIndex = this.questions.findIndex(item => item.id === q.id);
+        const card = this.createQuestionCardElement(q, globalIndex, sectionQuestions.length);
+        this.questionsContainer.appendChild(card);
+      });
     });
 
     // Refresh icons
@@ -175,10 +230,101 @@ class FormBuilder {
     }
   }
 
-  createQuestionCardElement(q, index) {
+  createSectionCardElement(sec, secIdx, totalSections) {
+    const card = document.createElement('div');
+    card.className = 'form-card section-card glass-card';
+    card.dataset.sectionId = sec.id;
+
+    card.innerHTML = `
+      <div class="section-header-top">
+        <div class="section-tag-badge">
+          <i data-lucide="layers"></i>
+          <span>Bagian ${secIdx + 1} dari ${totalSections}</span>
+        </div>
+        <div class="section-actions">
+          ${secIdx > 0 ? `
+            <button type="button" class="btn-q-icon sec-move-up" title="Pindah Bagian ke Atas">
+              <i data-lucide="chevron-up"></i>
+            </button>
+          ` : ''}
+          ${secIdx < totalSections - 1 ? `
+            <button type="button" class="btn-q-icon sec-move-down" title="Pindah Bagian ke Bawah">
+              <i data-lucide="chevron-down"></i>
+            </button>
+          ` : ''}
+          <button type="button" class="btn-q-icon sec-delete" title="Hapus Bagian Ini">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+      </div>
+      <div class="section-body">
+        <input type="text" class="input-section-title" value="${this.escapeHtml(sec.title || '')}" placeholder="Judul Bagian/Halaman...">
+        <textarea class="input-section-desc" placeholder="Deskripsi bagian ini (opsional)..." rows="1">${this.escapeHtml(sec.description || '')}</textarea>
+      </div>
+    `;
+
+    // Bind section input events
+    const titleInput = card.querySelector('.input-section-title');
+    titleInput.addEventListener('input', (e) => {
+      sec.title = e.target.value;
+    });
+
+    const descInput = card.querySelector('.input-section-desc');
+    descInput.addEventListener('input', (e) => {
+      sec.description = e.target.value;
+    });
+
+    // Move Section Up
+    const btnMoveUp = card.querySelector('.sec-move-up');
+    if (btnMoveUp) {
+      btnMoveUp.addEventListener('click', () => {
+        const temp = this.sections[secIdx];
+        this.sections[secIdx] = this.sections[secIdx - 1];
+        this.sections[secIdx - 1] = temp;
+        this.renderQuestions();
+      });
+    }
+
+    // Move Section Down
+    const btnMoveDown = card.querySelector('.sec-move-down');
+    if (btnMoveDown) {
+      btnMoveDown.addEventListener('click', () => {
+        const temp = this.sections[secIdx];
+        this.sections[secIdx] = this.sections[secIdx + 1];
+        this.sections[secIdx + 1] = temp;
+        this.renderQuestions();
+      });
+    }
+
+    // Delete Section
+    const btnDelete = card.querySelector('.sec-delete');
+    btnDelete.addEventListener('click', () => {
+      if (this.sections.length <= 1) {
+        window.app.showToast('Formulir harus memiliki minimal satu bagian', 'error');
+        return;
+      }
+
+      const targetSecId = secIdx > 0 ? this.sections[secIdx - 1].id : this.sections[1].id;
+      // Reassign questions in this section to target section
+      this.questions.forEach(q => {
+        if (q.sectionId === sec.id) {
+          q.sectionId = targetSecId;
+        }
+      });
+
+      this.sections.splice(secIdx, 1);
+      this.renderQuestions();
+      window.app.showToast('Bagian berhasil dihapus', 'info');
+    });
+
+    return card;
+  }
+
+  createQuestionCardElement(q, globalIndex, totalQuestionsInSec) {
     const card = document.createElement('div');
     card.className = 'form-card question-card glass-card';
     card.dataset.questionId = q.id;
+    card.setAttribute('draggable', 'false');
 
     // Build question body based on type
     let optionsHtml = '';
@@ -228,6 +374,11 @@ class FormBuilder {
     }
 
     card.innerHTML = `
+      <!-- Top Drag Handle -->
+      <div class="card-drag-handle" title="Tahan & geser untuk mengubah urutan pertanyaan">
+        <i data-lucide="grip-horizontal"></i>
+      </div>
+
       <div class="question-card-top">
         <div class="q-title-wrap">
           <input type="text" class="input-q-title" value="${this.escapeHtml(q.title || '')}" placeholder="Ketik pertanyaan di sini...">
@@ -261,12 +412,12 @@ class FormBuilder {
         </label>
 
         <div class="q-actions-group">
-          ${index > 0 ? `
+          ${globalIndex > 0 ? `
             <button type="button" class="btn-q-icon move-up" title="Pindah ke Atas">
               <i data-lucide="chevron-up"></i>
             </button>
           ` : ''}
-          ${index < this.questions.length - 1 ? `
+          ${globalIndex < this.questions.length - 1 ? `
             <button type="button" class="btn-q-icon move-down" title="Pindah ke Bawah">
               <i data-lucide="chevron-down"></i>
             </button>
@@ -280,6 +431,9 @@ class FormBuilder {
         </div>
       </div>
     `;
+
+    // Attach Drag and Drop handlers
+    this.attachDragEvents(card, q.id);
 
     // Attach local card event listeners
     const titleInput = card.querySelector('.input-q-title');
@@ -332,7 +486,7 @@ class FormBuilder {
     btnDuplicate.addEventListener('click', () => {
       const cloned = JSON.parse(JSON.stringify(q));
       cloned.id = 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-      this.questions.splice(index + 1, 0, cloned);
+      this.questions.splice(globalIndex + 1, 0, cloned);
       this.renderQuestions();
     });
 
@@ -342,16 +496,16 @@ class FormBuilder {
         window.app.showToast('Formulir harus memiliki minimal satu pertanyaan', 'error');
         return;
       }
-      this.questions.splice(index, 1);
+      this.questions.splice(globalIndex, 1);
       this.renderQuestions();
     });
 
     const btnMoveUp = card.querySelector('.btn-q-icon.move-up');
     if (btnMoveUp) {
       btnMoveUp.addEventListener('click', () => {
-        const temp = this.questions[index];
-        this.questions[index] = this.questions[index - 1];
-        this.questions[index - 1] = temp;
+        const temp = this.questions[globalIndex];
+        this.questions[globalIndex] = this.questions[globalIndex - 1];
+        this.questions[globalIndex - 1] = temp;
         this.renderQuestions();
       });
     }
@@ -359,9 +513,9 @@ class FormBuilder {
     const btnMoveDown = card.querySelector('.btn-q-icon.move-down');
     if (btnMoveDown) {
       btnMoveDown.addEventListener('click', () => {
-        const temp = this.questions[index];
-        this.questions[index] = this.questions[index + 1];
-        this.questions[index + 1] = temp;
+        const temp = this.questions[globalIndex];
+        this.questions[globalIndex] = this.questions[globalIndex + 1];
+        this.questions[globalIndex + 1] = temp;
         this.renderQuestions();
       });
     }
@@ -369,9 +523,90 @@ class FormBuilder {
     return card;
   }
 
-  addQuestion(type = 'text') {
+  attachDragEvents(card, questionId) {
+    const handle = card.querySelector('.card-drag-handle');
+
+    handle.addEventListener('mousedown', () => {
+      card.setAttribute('draggable', 'true');
+    });
+
+    document.addEventListener('mouseup', () => {
+      card.setAttribute('draggable', 'false');
+    });
+
+    card.addEventListener('dragstart', (e) => {
+      this.draggedQuestionId = questionId;
+      card.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', questionId);
+    });
+
+    card.addEventListener('dragend', () => {
+      card.classList.remove('is-dragging');
+      card.setAttribute('draggable', 'false');
+      this.draggedQuestionId = null;
+      document.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(el => {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+    });
+
+    card.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!this.draggedQuestionId || this.draggedQuestionId === questionId) return;
+
+      const rect = card.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+
+      card.classList.remove('drag-over-top', 'drag-over-bottom');
+      if (e.clientY < midY) {
+        card.classList.add('drag-over-top');
+      } else {
+        card.classList.add('drag-over-bottom');
+      }
+    });
+
+    card.addEventListener('dragleave', () => {
+      card.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+
+    card.addEventListener('drop', (e) => {
+      e.preventDefault();
+      card.classList.remove('drag-over-top', 'drag-over-bottom');
+
+      if (!this.draggedQuestionId || this.draggedQuestionId === questionId) return;
+
+      const sourceIndex = this.questions.findIndex(item => item.id === this.draggedQuestionId);
+      const targetIndex = this.questions.findIndex(item => item.id === questionId);
+
+      if (sourceIndex < 0 || targetIndex < 0) return;
+
+      const rect = card.getBoundingClientRect();
+      const insertBefore = e.clientY < rect.top + rect.height / 2;
+
+      const [draggedItem] = this.questions.splice(sourceIndex, 1);
+      
+      // Update sectionId to target section
+      const targetItem = this.questions.find(item => item.id === questionId);
+      if (targetItem) {
+        draggedItem.sectionId = targetItem.sectionId;
+      }
+
+      let newIndex = this.questions.findIndex(item => item.id === questionId);
+      if (!insertBefore) {
+        newIndex += 1;
+      }
+
+      this.questions.splice(newIndex, 0, draggedItem);
+      this.renderQuestions();
+      window.app.showToast('Urutan pertanyaan berhasil diubah', 'info');
+    });
+  }
+
+  addQuestion(type = 'text', targetSectionId = null) {
+    const secId = targetSectionId || (this.sections[this.sections.length - 1] ? this.sections[this.sections.length - 1].id : 'sec_1');
     const newQ = {
       id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      sectionId: secId,
       type,
       title: '',
       required: false
@@ -384,7 +619,7 @@ class FormBuilder {
     this.questions.push(newQ);
     this.renderQuestions();
 
-    // Scroll to bottom
+    // Scroll to new question
     setTimeout(() => {
       const cards = this.questionsContainer.querySelectorAll('.question-card');
       const lastCard = cards[cards.length - 1];
@@ -394,6 +629,41 @@ class FormBuilder {
         if (input) input.focus();
       }
     }, 50);
+  }
+
+  addSection() {
+    const secNum = this.sections.length + 1;
+    const newSec = {
+      id: 'sec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      title: `Bagian ${secNum}`,
+      description: ''
+    };
+
+    this.sections.push(newSec);
+
+    // Also add a new default question in this section
+    const newQ = {
+      id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      sectionId: newSec.id,
+      type: 'text',
+      title: '',
+      required: false
+    };
+    this.questions.push(newQ);
+
+    this.renderQuestions();
+    window.app.showToast(`Bagian ${secNum} berhasil ditambahkan!`, 'success');
+
+    // Scroll to the new section card
+    setTimeout(() => {
+      const secCards = this.questionsContainer.querySelectorAll('.section-card');
+      const lastSecCard = secCards[secCards.length - 1];
+      if (lastSecCard) {
+        lastSecCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const input = lastSecCard.querySelector('.input-section-title');
+        if (input) input.focus();
+      }
+    }, 60);
   }
 
   async saveCurrentForm() {
@@ -416,6 +686,7 @@ class FormBuilder {
       submitMessage: this.submitMsgInput.value.trim(),
       allowMultiple: this.allowMultipleCheck.checked,
       isActive: this.isActiveCheck.checked,
+      sections: this.sections,
       questions: this.questions
     };
 

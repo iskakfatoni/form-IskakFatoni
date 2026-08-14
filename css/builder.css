@@ -153,15 +153,152 @@
 }
 
 .question-card {
-  padding: 24px;
+  padding: 20px 24px 24px;
   border-left: 4px solid transparent;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
+  cursor: default;
+}
+
+/* Drag Handle */
+.card-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 4px 0 10px;
+  margin-top: -8px;
+  color: var(--text-muted);
+  cursor: grab;
+  user-select: none;
+  transition: color var(--transition-fast);
+}
+
+.card-drag-handle:hover {
+  color: var(--primary);
+}
+
+.card-drag-handle:active {
+  cursor: grabbing;
+}
+
+.card-drag-handle i {
+  width: 20px;
+  height: 20px;
+}
+
+/* Drag & Drop Visual Feedback */
+.question-card.is-dragging,
+.section-card.is-dragging {
+  opacity: 0.4;
+  border: 2px dashed var(--primary) !important;
+  transform: scale(0.98);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.question-card.drag-over-top,
+.section-card.drag-over-top {
+  border-top: 3px solid var(--primary) !important;
+  box-shadow: 0 -6px 16px var(--primary-glow);
+}
+
+.question-card.drag-over-bottom,
+.section-card.drag-over-bottom {
+  border-bottom: 3px solid var(--primary) !important;
+  box-shadow: 0 6px 16px var(--primary-glow);
 }
 
 .question-card.active, .question-card:focus-within {
   border-left-color: var(--primary);
   border-color: rgba(99, 102, 241, 0.4);
   box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.5);
+}
+
+/* Section Card in Builder */
+.section-card {
+  position: relative;
+  overflow: hidden;
+  padding: 20px 24px;
+  border-top: 4px solid #ec4899;
+  background: rgba(236, 72, 153, 0.04);
+  border-color: rgba(236, 72, 153, 0.25);
+  margin-top: 15px;
+  margin-bottom: 20px;
+  transition: all var(--transition-fast);
+}
+
+.section-card:hover, .section-card:focus-within {
+  border-color: rgba(236, 72, 153, 0.6);
+  box-shadow: 0 12px 30px -8px rgba(236, 72, 153, 0.2);
+}
+
+.section-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.section-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.input-section-title {
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-primary);
+  outline: none;
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+  transition: border-color var(--transition-fast);
+}
+
+.input-section-title:focus {
+  border-bottom-color: #ec4899;
+}
+
+.input-section-desc {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--text-secondary);
+  outline: none;
+  resize: vertical;
+  min-height: 40px;
+  transition: border-color var(--transition-fast);
+}
+
+.input-section-desc:focus {
+  border-bottom-color: #ec4899;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-actions .btn-q-icon:hover {
+  color: #ec4899;
+  background: rgba(236, 72, 153, 0.1);
 }
 
 .question-card-top {
@@ -422,11 +559,18 @@ input:checked + .slider:before {
   }
 }
 
+.main-add-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .btn-add-q {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 10px 18px;
   border-radius: var(--radius-md);
   background: var(--primary);
   color: #fff;
@@ -440,6 +584,28 @@ input:checked + .slider:before {
 
 .btn-add-q:hover {
   background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-add-sec {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.35);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-add-sec:hover {
+  background: rgba(236, 72, 153, 0.25);
+  color: #fff;
+  border-color: #ec4899;
   transform: translateY(-1px);
 }
 

@@ -247,12 +247,96 @@
   display: block;
 }
 
-/* Form Submit Area */
+/* Section Progress Bar */
+.section-progress-wrap {
+  padding: 16px 24px;
+}
+
+.progress-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.progress-step-text {
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.progress-pct-text {
+  color: var(--text-muted);
+}
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-surface-hover);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), #ec4899);
+  border-radius: 9999px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Respondent Live Section Header Card */
+.live-section-header-card {
+  padding: 24px 28px;
+  border-top: 4px solid #ec4899;
+  background: rgba(236, 72, 153, 0.03);
+}
+
+.live-sec-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.live-sec-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.live-sec-desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+/* Form Submit & Step Nav Area */
 .form-submit-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px 28px;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.step-nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* Success Card */

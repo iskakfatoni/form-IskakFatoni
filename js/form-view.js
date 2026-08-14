@@ -1,11 +1,14 @@
 /**
  * FORMCRAFT - Form Viewer / Respondent Logic
- * Handles rendering the live public form, validation, and submitting responses to Firestore.
+ * Handles multi-step Section wizard, live validation, progress bar,
+ * and submitting responses to Firestore / LocalStorage.
  */
 
 class FormViewer {
   constructor() {
     this.currentForm = null;
+    this.sections = [];
+    this.currentStep = 0;
     this.answers = {};
     this.initElements();
     this.bindEvents();
@@ -21,6 +24,17 @@ class FormViewer {
     this.successCard = document.getElementById('form-view-success');
     this.successMsgEl = document.getElementById('form-view-success-message');
     this.btnSubmitAnother = document.getElementById('btn-submit-another');
+
+    // Section progress elements
+    this.progressWrap = document.getElementById('form-section-progress-wrap');
+    this.progressText = document.getElementById('section-progress-text');
+    this.progressPct = document.getElementById('section-progress-percent');
+    this.progressBar = document.getElementById('section-progress-bar');
+
+    // Step Nav Buttons
+    this.btnPrevStep = document.getElementById('btn-prev-step');
+    this.btnNextStep = document.getElementById('btn-next-step');
+    this.btnSubmitResponse = document.getElementById('btn-submit-response');
   }
 
   bindEvents() {
@@ -28,6 +42,18 @@ class FormViewer {
       e.preventDefault();
       this.handleSubmit();
     });
+
+    if (this.btnNextStep) {
+      this.btnNextStep.addEventListener('click', () => {
+        this.handleNextStep();
+      });
+    }
+
+    if (this.btnPrevStep) {
+      this.btnPrevStep.addEventListener('click', () => {
+        this.handlePrevStep();
+      });
+    }
 
     document.getElementById('btn-reset-form').addEventListener('click', () => {
       if (confirm('Apakah Anda yakin ingin mengosongkan seluruh jawaban?')) {
@@ -45,6 +71,7 @@ class FormViewer {
 
   async loadForm(formId) {
     this.answers = {};
+    this.currentStep = 0;
     this.successCard.classList.add('hidden');
     this.formElement.classList.remove('hidden');
 
@@ -62,6 +89,20 @@ class FormViewer {
     }
 
     this.currentForm = form;
+
+    // Standardize sections
+    if (!form.sections || form.sections.length === 0) {
+      this.sections = [{ id: 'sec_1', title: form.title || 'Bagian 1', description: form.description || '' }];
+    } else {
+      this.sections = form.sections;
+    }
+
+    // Standardize questions sectionId
+    const firstSecId = this.sections[0].id;
+    (this.currentForm.questions || []).forEach(q => {
+      if (!q.sectionId) q.sectionId = firstSecId;
+    });
+
     this.renderForm();
   }
 
@@ -88,12 +129,87 @@ class FormViewer {
     // Allow multiple
     this.btnSubmitAnother.style.display = form.allowMultiple !== false ? 'inline-flex' : 'none';
 
-    // Render questions
+    this.renderCurrentStep();
+  }
+
+  renderCurrentStep() {
+    const totalSteps = this.sections.length;
+    const isMultiStep = totalSteps > 1;
+    const currentSec = this.sections[this.currentStep] || this.sections[0];
+
+    // Progress Bar
+    if (isMultiStep) {
+      this.progressWrap.classList.remove('hidden');
+      const pct = Math.round(((this.currentStep + 1) / totalSteps) * 100);
+      this.progressText.textContent = `Bagian ${this.currentStep + 1} dari ${totalSteps}`;
+      this.progressPct.textContent = `${pct}%`;
+      this.progressBar.style.width = `${pct}%`;
+    } else {
+      this.progressWrap.classList.add('hidden');
+    }
+
+    // Buttons Visibility
+    if (isMultiStep) {
+      if (this.currentStep === 0) {
+        this.btnPrevStep.classList.add('hidden');
+        this.btnNextStep.classList.remove('hidden');
+        this.btnSubmitResponse.classList.add('hidden');
+      } else if (this.currentStep < totalSteps - 1) {
+        this.btnPrevStep.classList.remove('hidden');
+        this.btnNextStep.classList.remove('hidden');
+        this.btnSubmitResponse.classList.add('hidden');
+      } else {
+        // Last step
+        this.btnPrevStep.classList.remove('hidden');
+        this.btnNextStep.classList.add('hidden');
+        this.btnSubmitResponse.classList.remove('hidden');
+      }
+    } else {
+      this.btnPrevStep.classList.add('hidden');
+      this.btnNextStep.classList.add('hidden');
+      this.btnSubmitResponse.classList.remove('hidden');
+    }
+
+    // Render questions for current section
     this.questionsContainer.innerHTML = '';
-    (form.questions || []).forEach((q, index) => {
-      const card = this.renderQuestionItem(q, index);
-      this.questionsContainer.appendChild(card);
-    });
+
+    // If step > 0 in multi-step form, render Section Header Card
+    if (isMultiStep && this.currentStep > 0 && currentSec) {
+      const secHeaderCard = document.createElement('div');
+      secHeaderCard.className = 'glass-card live-section-header-card';
+      secHeaderCard.innerHTML = `
+        <div class="live-sec-badge">
+          <i data-lucide="layers"></i>
+          <span>Bagian ${this.currentStep + 1} dari ${totalSteps}</span>
+        </div>
+        <h2 class="live-sec-title">${this.escapeHtml(currentSec.title || `Bagian ${this.currentStep + 1}`)}</h2>
+        ${currentSec.description ? `<p class="live-sec-desc">${this.escapeHtml(currentSec.description)}</p>` : ''}
+      `;
+      this.questionsContainer.appendChild(secHeaderCard);
+    }
+
+    // Filter questions belonging to this section
+    const stepQuestions = isMultiStep 
+      ? (this.currentForm.questions || []).filter(q => q.sectionId === currentSec.id)
+      : (this.currentForm.questions || []);
+
+    if (stepQuestions.length === 0) {
+      const emptyNotice = document.createElement('div');
+      emptyNotice.className = 'glass-card';
+      emptyNotice.style.padding = '24px';
+      emptyNotice.style.textAlign = 'center';
+      emptyNotice.style.color = 'var(--text-muted)';
+      emptyNotice.innerHTML = '<p>Tidak ada pertanyaan pada bagian ini.</p>';
+      this.questionsContainer.appendChild(emptyNotice);
+    } else {
+      stepQuestions.forEach((q, index) => {
+        const card = this.renderQuestionItem(q, index);
+        this.questionsContainer.appendChild(card);
+      });
+    }
+
+    // Restore previously saved answers for this step
+    this.restoreAnswersForCurrentStep(stepQuestions);
 
     if (window.lucide) {
       window.lucide.createIcons();
@@ -116,7 +232,7 @@ class FormViewer {
       const options = q.options || ['Opsi 1'];
       inputHtml = `
         <div class="live-options-group">
-          ${options.map((opt, i) => `
+          ${options.map(opt => `
             <label class="live-choice-label">
               <input type="radio" name="${qName}" value="${this.escapeHtml(opt)}">
               <span class="custom-radio"></span>
@@ -129,7 +245,7 @@ class FormViewer {
       const options = q.options || ['Opsi 1'];
       inputHtml = `
         <div class="live-options-group">
-          ${options.map((opt, i) => `
+          ${options.map(opt => `
             <label class="live-choice-label custom-checkbox-label">
               <input type="checkbox" name="${qName}" value="${this.escapeHtml(opt)}">
               <span class="custom-box"></span>
@@ -210,7 +326,7 @@ class FormViewer {
       });
     }
 
-    // Input listeners to clear error state
+    // Input listeners to clear error state and sync answers
     card.querySelectorAll('input, select, textarea').forEach(input => {
       input.addEventListener('change', () => {
         card.classList.remove('has-error');
@@ -223,13 +339,51 @@ class FormViewer {
     return card;
   }
 
-  collectAnswers() {
-    const answers = {};
+  restoreAnswersForCurrentStep(questions) {
+    questions.forEach(q => {
+      const savedVal = this.answers[q.id];
+      if (savedVal === undefined || savedVal === null) return;
+
+      const qCard = this.questionsContainer.querySelector(`[data-question-id="${q.id}"]`);
+      if (!qCard) return;
+      const qName = `q_${q.id}`;
+
+      if (q.type === 'choice') {
+        const radio = qCard.querySelector(`input[name="${qName}"][value="${CSS.escape(savedVal)}"]`);
+        if (radio) radio.checked = true;
+      } else if (q.type === 'checkbox' && Array.isArray(savedVal)) {
+        savedVal.forEach(v => {
+          const cb = qCard.querySelector(`input[name="${qName}"][value="${CSS.escape(v)}"]`);
+          if (cb) cb.checked = true;
+        });
+      } else if (q.type === 'rating') {
+        const hiddenInput = qCard.querySelector(`input[name="${qName}"]`);
+        if (hiddenInput) hiddenInput.value = savedVal;
+        const starBtns = qCard.querySelectorAll('.rating-star-btn');
+        starBtns.forEach(s => {
+          const sVal = parseInt(s.dataset.value, 10);
+          s.classList.toggle('active', sVal <= savedVal);
+        });
+      } else {
+        const input = qCard.querySelector(`[name="${qName}"]`);
+        if (input) input.value = savedVal;
+      }
+    });
+  }
+
+  collectCurrentStepAnswers() {
+    const currentSec = this.sections[this.currentStep] || this.sections[0];
+    const isMultiStep = this.sections.length > 1;
+    const stepQuestions = isMultiStep 
+      ? (this.currentForm.questions || []).filter(q => q.sectionId === currentSec.id)
+      : (this.currentForm.questions || []);
+
     let isValid = true;
     let firstErrorElement = null;
 
-    (this.currentForm.questions || []).forEach(q => {
+    stepQuestions.forEach(q => {
       const qCard = this.questionsContainer.querySelector(`[data-question-id="${q.id}"]`);
+      if (!qCard) return;
       const qName = `q_${q.id}`;
       let val = null;
 
@@ -247,7 +401,7 @@ class FormViewer {
         val = input ? input.value.trim() : '';
       }
 
-      // Check required
+      // Validate required
       let isEmpty = false;
       if (q.required) {
         if (q.type === 'checkbox' && (!val || val.length === 0)) {
@@ -267,21 +421,61 @@ class FormViewer {
         qCard.classList.remove('has-error');
       }
 
-      answers[q.id] = val;
+      this.answers[q.id] = val;
     });
 
     if (!isValid && firstErrorElement) {
       firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      window.app.showToast('Harap lengkapi semua pertanyaan yang wajib diisi', 'error');
-      return null;
+      window.app.showToast('Harap lengkapi semua pertanyaan wajib pada bagian ini', 'error');
+      return false;
     }
 
-    return answers;
+    return true;
+  }
+
+  handleNextStep() {
+    if (!this.collectCurrentStepAnswers()) return;
+
+    if (this.currentStep < this.sections.length - 1) {
+      this.currentStep++;
+      this.renderCurrentStep();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  handlePrevStep() {
+    // Save current step data without strict required validation when navigating back
+    const currentSec = this.sections[this.currentStep] || this.sections[0];
+    const isMultiStep = this.sections.length > 1;
+    const stepQuestions = isMultiStep 
+      ? (this.currentForm.questions || []).filter(q => q.sectionId === currentSec.id)
+      : (this.currentForm.questions || []);
+
+    stepQuestions.forEach(q => {
+      const qCard = this.questionsContainer.querySelector(`[data-question-id="${q.id}"]`);
+      if (!qCard) return;
+      const qName = `q_${q.id}`;
+      if (q.type === 'choice') {
+        const checked = qCard.querySelector(`input[name="${qName}"]:checked`);
+        if (checked) this.answers[q.id] = checked.value;
+      } else if (q.type === 'checkbox') {
+        const checkedList = qCard.querySelectorAll(`input[name="${qName}"]:checked`);
+        this.answers[q.id] = Array.from(checkedList).map(el => el.value);
+      } else if (q.type !== 'rating') {
+        const input = qCard.querySelector(`[name="${qName}"]`);
+        if (input) this.answers[q.id] = input.value.trim();
+      }
+    });
+
+    if (this.currentStep > 0) {
+      this.currentStep--;
+      this.renderCurrentStep();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   async handleSubmit() {
-    const answers = this.collectAnswers();
-    if (!answers) return;
+    if (!this.collectCurrentStepAnswers()) return;
 
     const btnSubmit = document.getElementById('btn-submit-response');
     const originalText = btnSubmit.innerHTML;
@@ -289,7 +483,7 @@ class FormViewer {
     btnSubmit.innerHTML = '<span>Mengirim tanggapan...</span>';
 
     try {
-      await window.formStorage.submitResponse(this.currentForm.id, answers);
+      await window.formStorage.submitResponse(this.currentForm.id, this.answers);
       
       // Show success screen
       this.formElement.classList.add('hidden');
@@ -308,9 +502,9 @@ class FormViewer {
   resetAnswers() {
     this.formElement.reset();
     this.answers = {};
-    this.questionsContainer.querySelectorAll('.has-error').forEach(c => c.classList.remove('has-error'));
-    this.questionsContainer.querySelectorAll('.rating-star-btn').forEach(s => s.classList.remove('active'));
-    this.questionsContainer.querySelectorAll('input[type="hidden"]').forEach(h => h.value = '');
+    this.currentStep = 0;
+    this.renderCurrentStep();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   escapeHtml(str) {
