@@ -234,23 +234,27 @@ class App {
         </div>
 
         <div class="form-item-actions">
-          <button class="btn btn-secondary btn-sm btn-action-view" title="Buka Form">
-            <i data-lucide="eye"></i>
-            <span>Isi</span>
-          </button>
-          <button class="btn btn-secondary btn-sm btn-action-resp" title="Lihat Respon & Export Excel">
-            <i data-lucide="bar-chart-2"></i>
-            <span>Respon</span>
-          </button>
-          <button class="btn btn-secondary btn-sm btn-action-edit" title="Edit Form">
-            <i data-lucide="edit-3"></i>
-          </button>
-          <button class="btn btn-secondary btn-sm btn-action-share" title="Bagikan Link">
-            <i data-lucide="share-2"></i>
-          </button>
-          <button class="btn btn-ghost btn-sm text-danger btn-action-del" title="Hapus Form">
-            <i data-lucide="trash-2"></i>
-          </button>
+          <div class="form-item-main-btns">
+            <button class="btn btn-secondary btn-sm btn-action-view" title="Buka Formulir">
+              <i data-lucide="eye"></i>
+              <span>Isi Form</span>
+            </button>
+            <button class="btn btn-secondary btn-sm btn-action-resp" title="Lihat Respon & Export Excel">
+              <i data-lucide="bar-chart-2"></i>
+              <span>Respon</span>
+            </button>
+          </div>
+          <div class="card-icon-actions">
+            <button class="btn btn-ghost btn-sm btn-action-edit" title="Edit Pertanyaan">
+              <i data-lucide="edit-3"></i>
+            </button>
+            <button class="btn btn-ghost btn-sm btn-action-share" title="Bagikan & QR Code">
+              <i data-lucide="share-2"></i>
+            </button>
+            <button class="btn btn-ghost btn-sm text-danger btn-action-del" title="Hapus Form">
+              <i data-lucide="trash-2"></i>
+            </button>
+          </div>
         </div>
       `;
 
