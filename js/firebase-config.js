@@ -35,9 +35,12 @@ class FirebaseManager {
         if (typeof firebase.auth === 'function') {
           this.auth = firebase.auth();
         }
+        if (typeof firebase.storage === 'function') {
+          this.storage = firebase.storage();
+        }
         this.isConfigured = true;
         this.updateStatusUI(true);
-        console.log('Firebase Cloud Firestore & Auth aktif untuk project:', this.config.projectId);
+        console.log('Firebase Cloud Firestore, Auth & Storage aktif untuk project:', this.config.projectId);
         return true;
       }
     } catch (error) {

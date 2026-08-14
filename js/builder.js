@@ -336,17 +336,36 @@ class FormBuilder {
       const options = q.options || ['Opsi 1'];
       optionsHtml = `
         <div class="question-options-container">
-          ${options.map((opt, optIdx) => `
-            <div class="option-row" data-opt-index="${optIdx}">
-              <i data-lucide="${icon}" class="option-type-icon"></i>
-              <input type="text" class="input-option-text" value="${this.escapeHtml(opt)}" placeholder="Nama opsi (Bisa paste list Excel/Sheets)...">
-              ${options.length > 1 ? `
-                <button type="button" class="btn-remove-option" title="Hapus Opsi">
-                  <i data-lucide="x"></i>
+          ${options.map((opt, optIdx) => {
+            const optText = typeof opt === 'object' ? (opt.text || '') : opt;
+            const optImg = typeof opt === 'object' ? (opt.imageUrl || '') : '';
+            return `
+              <div class="option-row" data-opt-index="${optIdx}">
+                <i data-lucide="${icon}" class="option-type-icon"></i>
+                <input type="text" class="input-option-text" value="${this.escapeHtml(optText)}" placeholder="Nama opsi (Bisa paste list Excel/Sheets)...">
+                
+                <button type="button" class="btn-opt-image ${optImg ? 'has-image' : ''}" title="Upload Gambar Pilihan Jawaban">
+                  <i data-lucide="image"></i>
                 </button>
-              ` : ''}
-            </div>
-          `).join('')}
+                <input type="file" class="input-opt-image-file" accept="image/*" style="display:none;">
+
+                ${optImg ? `
+                  <div class="opt-image-preview-chip">
+                    <img src="${this.escapeHtml(optImg)}" class="opt-thumb-img" alt="Thumbnail Opsi">
+                    <button type="button" class="btn-remove-opt-image" title="Hapus Gambar Opsi">
+                      <i data-lucide="x"></i>
+                    </button>
+                  </div>
+                ` : ''}
+
+                ${options.length > 1 ? `
+                  <button type="button" class="btn-remove-option" title="Hapus Opsi">
+                    <i data-lucide="x"></i>
+                  </button>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
           <button type="button" class="btn-add-option-row">
             <i data-lucide="plus"></i>
             <span>Tambah Opsi</span>
@@ -384,7 +403,11 @@ class FormBuilder {
 
       <div class="question-card-top">
         <div class="q-title-wrap">
-          <input type="text" class="input-q-title" value="${this.escapeHtml(q.title || '')}" placeholder="Ketik pertanyaan di sini...">
+          <input type="text" class="input-q-title" value="${this.escapeHtml(q.title || '')}" placeholder="Ketik pertanyaan / soal di sini...">
+          <button type="button" class="btn-q-image ${q.imageUrl ? 'has-image' : ''}" title="Tambahkan / Ganti Gambar Soal">
+            <i data-lucide="image"></i>
+          </button>
+          <input type="file" class="input-q-image-file" accept="image/*" style="display:none;">
         </div>
         <div class="q-type-select-wrap">
           <select class="select-q-type">
@@ -400,6 +423,22 @@ class FormBuilder {
           </select>
         </div>
       </div>
+
+      ${q.imageUrl ? `
+        <div class="q-image-preview-card">
+          <img src="${this.escapeHtml(q.imageUrl)}" alt="Gambar Soal" class="q-preview-img">
+          <div class="q-image-actions">
+            <button type="button" class="btn-replace-q-image btn btn-secondary btn-xs">
+              <i data-lucide="refresh-cw"></i>
+              <span>Ganti Gambar</span>
+            </button>
+            <button type="button" class="btn-remove-q-image btn btn-ghost btn-xs" style="color: var(--accent-rose);">
+              <i data-lucide="trash-2"></i>
+              <span>Hapus Gambar</span>
+            </button>
+          </div>
+        </div>
+      ` : ''}
 
       <div class="question-card-middle">
         ${optionsHtml}
@@ -444,6 +483,58 @@ class FormBuilder {
       q.title = e.target.value;
     });
 
+    // Question Image Upload
+    const btnQImage = card.querySelector('.btn-q-image');
+    const inputQImageFile = card.querySelector('.input-q-image-file');
+    if (btnQImage && inputQImageFile) {
+      btnQImage.addEventListener('click', () => {
+        inputQImageFile.click();
+      });
+
+      inputQImageFile.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (window.app && typeof window.app.showToast === 'function') {
+          window.app.showToast('Mengompresi & mengunggah gambar soal...', 'info');
+        }
+
+        try {
+          const formId = this.currentForm ? this.currentForm.id : 'form_' + Date.now();
+          const result = await window.imageUploader.processAndUpload(file, { formId, context: 'question' });
+          q.imageUrl = result.url;
+          this.renderQuestions();
+          if (window.app && typeof window.app.showToast === 'function') {
+            window.app.showToast('Gambar soal berhasil ditambahkan!', 'success');
+          }
+        } catch (err) {
+          console.error(err);
+          if (window.app && typeof window.app.showToast === 'function') {
+            window.app.showToast('Gagal memproses gambar: ' + err.message, 'error');
+          }
+        }
+      });
+    }
+
+    // Replace & Remove Question Image
+    const btnReplaceQImg = card.querySelector('.btn-replace-q-image');
+    if (btnReplaceQImg && inputQImageFile) {
+      btnReplaceQImg.addEventListener('click', () => {
+        inputQImageFile.click();
+      });
+    }
+
+    const btnRemoveQImg = card.querySelector('.btn-remove-q-image');
+    if (btnRemoveQImg) {
+      btnRemoveQImg.addEventListener('click', () => {
+        delete q.imageUrl;
+        this.renderQuestions();
+        if (window.app && typeof window.app.showToast === 'function') {
+          window.app.showToast('Gambar soal telah dihapus', 'info');
+        }
+      });
+    }
+
     const typeSelect = card.querySelector('.select-q-type');
     typeSelect.addEventListener('change', (e) => {
       q.type = e.target.value;
@@ -458,57 +549,118 @@ class FormBuilder {
       q.required = e.target.checked;
     });
 
-    // Options row modifications (with Excel / Google Sheets multi-line paste support)
-    const optInputs = card.querySelectorAll('.input-option-text');
-    optInputs.forEach((input, optIdx) => {
-      input.addEventListener('input', (e) => {
-        if (!q.options) q.options = [];
-        q.options[optIdx] = e.target.value;
-      });
+    // Options row modifications (with Excel / Google Sheets multi-line paste support & Option Image Upload)
+    const optRows = card.querySelectorAll('.option-row');
+    optRows.forEach((row, optIdx) => {
+      const input = row.querySelector('.input-option-text');
+      const btnOptImg = row.querySelector('.btn-opt-image');
+      const inputOptImgFile = row.querySelector('.input-opt-image-file');
+      const btnRemoveOptImg = row.querySelector('.btn-remove-opt-image');
 
-      // Paste multiple items from Excel / Google Sheets
-      input.addEventListener('paste', (e) => {
-        const pasteData = (e.clipboardData || window.clipboardData).getData('text');
-        if (pasteData && (pasteData.includes('\n') || pasteData.includes('\r'))) {
-          e.preventDefault();
-          const lines = pasteData
-            .split(/\r?\n/)
-            .map(l => l.trim())
-            .filter(l => l.length > 0);
-
-          if (lines.length > 0) {
-            if (!q.options) q.options = [];
-            // Replace current option with first line, and insert remaining lines
-            q.options.splice(optIdx, 1, ...lines);
-            this.renderQuestions();
-            if (window.app && typeof window.app.showToast === 'function') {
-              window.app.showToast(`Berhasil menempelkan ${lines.length} opsi dari Excel/Sheets!`, 'success');
-            }
-          }
-        }
-      });
-
-      // Press Enter to create a new option row below and focus it
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
+      if (input) {
+        input.addEventListener('input', (e) => {
           if (!q.options) q.options = [];
-          q.options.splice(optIdx + 1, 0, `Opsi ${q.options.length + 1}`);
-          this.renderQuestions();
+          if (typeof q.options[optIdx] === 'object') {
+            q.options[optIdx].text = e.target.value;
+          } else {
+            q.options[optIdx] = e.target.value;
+          }
+        });
 
-          // Focus the next option input
-          setTimeout(() => {
-            const currentCard = document.querySelector(`[data-question-id="${q.id}"]`);
-            if (currentCard) {
-              const inputs = currentCard.querySelectorAll('.input-option-text');
-              if (inputs[optIdx + 1]) {
-                inputs[optIdx + 1].focus();
-                inputs[optIdx + 1].select();
+        // Paste multiple items from Excel / Google Sheets
+        input.addEventListener('paste', (e) => {
+          const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+          if (pasteData && (pasteData.includes('\n') || pasteData.includes('\r'))) {
+            e.preventDefault();
+            const lines = pasteData
+              .split(/\r?\n/)
+              .map(l => l.trim())
+              .filter(l => l.length > 0);
+
+            if (lines.length > 0) {
+              if (!q.options) q.options = [];
+              // Replace current option with first line, and insert remaining lines
+              q.options.splice(optIdx, 1, ...lines);
+              this.renderQuestions();
+              if (window.app && typeof window.app.showToast === 'function') {
+                window.app.showToast(`Berhasil menempelkan ${lines.length} opsi dari Excel/Sheets!`, 'success');
               }
             }
-          }, 60);
-        }
-      });
+          }
+        });
+
+        // Press Enter to create a new option row below and focus it
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (!q.options) q.options = [];
+            q.options.splice(optIdx + 1, 0, `Opsi ${q.options.length + 1}`);
+            this.renderQuestions();
+
+            // Focus the next option input
+            setTimeout(() => {
+              const currentCard = document.querySelector(`[data-question-id="${q.id}"]`);
+              if (currentCard) {
+                const inputs = currentCard.querySelectorAll('.input-option-text');
+                if (inputs[optIdx + 1]) {
+                  inputs[optIdx + 1].focus();
+                  inputs[optIdx + 1].select();
+                }
+              }
+            }, 60);
+          }
+        });
+      }
+
+      // Option Image Upload
+      if (btnOptImg && inputOptImgFile) {
+        btnOptImg.addEventListener('click', () => {
+          inputOptImgFile.click();
+        });
+
+        inputOptImgFile.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          if (window.app && typeof window.app.showToast === 'function') {
+            window.app.showToast('Mengompresi & mengunggah gambar opsi...', 'info');
+          }
+
+          try {
+            const formId = this.currentForm ? this.currentForm.id : 'form_' + Date.now();
+            const result = await window.imageUploader.processAndUpload(file, { formId, context: 'option' });
+            
+            if (!q.options) q.options = [];
+            const currentOpt = q.options[optIdx];
+            const optText = typeof currentOpt === 'object' ? (currentOpt.text || '') : (currentOpt || `Opsi ${optIdx + 1}`);
+
+            q.options[optIdx] = {
+              text: optText,
+              imageUrl: result.url
+            };
+
+            this.renderQuestions();
+            if (window.app && typeof window.app.showToast === 'function') {
+              window.app.showToast('Gambar opsi berhasil ditambahkan!', 'success');
+            }
+          } catch (err) {
+            console.error(err);
+            if (window.app && typeof window.app.showToast === 'function') {
+              window.app.showToast('Gagal memproses gambar opsi: ' + err.message, 'error');
+            }
+          }
+        });
+      }
+
+      // Remove Option Image
+      if (btnRemoveOptImg) {
+        btnRemoveOptImg.addEventListener('click', () => {
+          if (typeof q.options[optIdx] === 'object') {
+            q.options[optIdx] = q.options[optIdx].text || '';
+          }
+          this.renderQuestions();
+        });
+      }
     });
 
     const btnRemoveOpts = card.querySelectorAll('.btn-remove-option');

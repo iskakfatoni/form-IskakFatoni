@@ -246,26 +246,48 @@ class FormViewer {
       const options = q.options || ['Opsi 1'];
       inputHtml = `
         <div class="live-options-group">
-          ${options.map(opt => `
-            <label class="live-choice-label">
-              <input type="radio" name="${qName}" value="${this.escapeHtml(opt)}">
-              <span class="custom-radio"></span>
-              <span class="choice-text">${this.escapeHtml(opt)}</span>
-            </label>
-          `).join('')}
+          ${options.map(opt => {
+            const optText = typeof opt === 'object' ? (opt.text || '') : opt;
+            const optImg = typeof opt === 'object' ? (opt.imageUrl || '') : '';
+            return `
+              <label class="live-choice-label ${optImg ? 'has-opt-img' : ''}">
+                <input type="radio" name="${qName}" value="${this.escapeHtml(optText)}">
+                <span class="custom-radio"></span>
+                <div class="choice-content-wrap">
+                  ${optImg ? `
+                    <div class="live-opt-img-box">
+                      <img src="${this.escapeHtml(optImg)}" alt="${this.escapeHtml(optText)}" class="live-opt-img" loading="lazy">
+                    </div>
+                  ` : ''}
+                  <span class="choice-text">${this.escapeHtml(optText)}</span>
+                </div>
+              </label>
+            `;
+          }).join('')}
         </div>
       `;
     } else if (q.type === 'checkbox') {
       const options = q.options || ['Opsi 1'];
       inputHtml = `
         <div class="live-options-group">
-          ${options.map(opt => `
-            <label class="live-choice-label custom-checkbox-label">
-              <input type="checkbox" name="${qName}" value="${this.escapeHtml(opt)}">
-              <span class="custom-box"></span>
-              <span class="choice-text">${this.escapeHtml(opt)}</span>
-            </label>
-          `).join('')}
+          ${options.map(opt => {
+            const optText = typeof opt === 'object' ? (opt.text || '') : opt;
+            const optImg = typeof opt === 'object' ? (opt.imageUrl || '') : '';
+            return `
+              <label class="live-choice-label custom-checkbox-label ${optImg ? 'has-opt-img' : ''}">
+                <input type="checkbox" name="${qName}" value="${this.escapeHtml(optText)}">
+                <span class="custom-box"></span>
+                <div class="choice-content-wrap">
+                  ${optImg ? `
+                    <div class="live-opt-img-box">
+                      <img src="${this.escapeHtml(optImg)}" alt="${this.escapeHtml(optText)}" class="live-opt-img" loading="lazy">
+                    </div>
+                  ` : ''}
+                  <span class="choice-text">${this.escapeHtml(optText)}</span>
+                </div>
+              </label>
+            `;
+          }).join('')}
         </div>
       `;
     } else if (q.type === 'dropdown') {
@@ -273,7 +295,10 @@ class FormViewer {
       inputHtml = `
         <select class="live-select" name="${qName}">
           <option value="">-- Pilih Jawaban --</option>
-          ${options.map(opt => `<option value="${this.escapeHtml(opt)}">${this.escapeHtml(opt)}</option>`).join('')}
+          ${options.map(opt => {
+            const optText = typeof opt === 'object' ? (opt.text || '') : opt;
+            return `<option value="${this.escapeHtml(optText)}">${this.escapeHtml(optText)}</option>`;
+          }).join('')}
         </select>
       `;
     } else if (q.type === 'rating') {
@@ -313,6 +338,11 @@ class FormViewer {
           ${q.required ? '<span class="live-q-required-mark">*</span>' : ''}
         </label>
       </div>
+      ${q.imageUrl ? `
+        <div class="live-q-image-container">
+          <img src="${this.escapeHtml(q.imageUrl)}" alt="${this.escapeHtml(q.title || 'Ilustrasi Soal')}" class="live-q-image" loading="lazy">
+        </div>
+      ` : ''}
       <div class="live-q-body">
         ${inputHtml}
       </div>

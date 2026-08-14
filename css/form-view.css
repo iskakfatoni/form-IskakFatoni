@@ -212,9 +212,61 @@
   background: var(--primary);
 }
 
+/* Question Image Display */
+.live-q-image-container {
+  margin: 12px 0 18px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.15);
+  max-width: 100%;
+}
+
+.live-q-image {
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Choice & Checkbox with Images */
+.choice-content-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.live-choice-label.has-opt-img {
+  padding: 10px 14px;
+}
+
+.live-opt-img-box {
+  width: 54px;
+  height: 54px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.live-opt-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.live-choice-label input:checked ~ .choice-content-wrap .choice-text,
 .live-choice-label input:checked ~ .choice-text {
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.live-choice-label:has(input:checked) {
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.08);
 }
 
 /* Rating Stars / Scale Component */

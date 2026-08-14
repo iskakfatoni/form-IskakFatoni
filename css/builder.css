@@ -406,24 +406,133 @@
   transition: color var(--transition-fast);
 }
 
-.btn-remove-option:hover {
-  color: var(--accent-rose);
+/* Question Image & Title Wrap */
+.q-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
 }
 
-.btn-add-option-row {
-  align-self: flex-start;
-  background: transparent;
-  border: none;
-  color: var(--primary);
-  font-size: 0.85rem;
-  font-weight: 600;
+.btn-q-image {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-q-image:hover, .btn-q-image.has-image {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.btn-q-image svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Question Image Preview Card */
+.q-image-preview-card {
+  position: relative;
+  margin: 12px 0 16px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.2);
+  display: inline-flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.q-preview-img {
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  display: block;
+}
+
+.q-image-actions {
+  display: flex;
   gap: 6px;
-  padding: 6px 10px;
+  padding: 8px 10px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border-color);
+  justify-content: flex-end;
+}
+
+.btn-xs {
+  padding: 4px 8px;
+  font-size: 0.75rem;
   border-radius: var(--radius-sm);
-  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Option Row Image Button & Thumbnail */
+.btn-opt-image {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-opt-image:hover, .btn-opt-image.has-image {
+  color: var(--primary);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.btn-opt-image svg {
+  width: 16px;
+  height: 16px;
+}
+
+.opt-image-preview-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px 2px 2px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.opt-thumb-img {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.btn-remove-opt-image {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.btn-remove-opt-image:hover {
+  color: var(--accent-rose);
 }
 
 .btn-add-option-row:hover {
