@@ -14,9 +14,26 @@ class App {
   }
 
   initControllers() {
-    this.builder = new FormBuilder();
-    this.viewer = new FormViewer();
-    this.responsesDashboard = new ResponsesDashboard();
+    try {
+      this.builder = typeof FormBuilder !== 'undefined' ? new FormBuilder() : null;
+    } catch (e) {
+      console.error('[App] Error initializing FormBuilder:', e);
+      this.builder = null;
+    }
+
+    try {
+      this.viewer = typeof FormViewer !== 'undefined' ? new FormViewer() : null;
+    } catch (e) {
+      console.error('[App] Error initializing FormViewer:', e);
+      this.viewer = null;
+    }
+
+    try {
+      this.responsesDashboard = typeof ResponsesDashboard !== 'undefined' ? new ResponsesDashboard() : null;
+    } catch (e) {
+      console.error('[App] Error initializing ResponsesDashboard:', e);
+      this.responsesDashboard = null;
+    }
   }
 
   bindEvents() {
@@ -89,7 +106,7 @@ class App {
       document.body.classList.remove('responder-mode');
       this.showSection('view-builder');
       if (navBuilder) navBuilder.classList.add('active');
-      this.builder.loadForm(param);
+      if (this.builder) this.builder.loadForm(param);
     } else if (route === 'view' || route === 'form') {
       // HIDE main dashboard navbar so responder is 100% focused on the form
       if (mainNav) mainNav.style.display = 'none';
@@ -112,13 +129,13 @@ class App {
       }
 
       this.showSection('view-form');
-      this.viewer.loadForm(param);
+      if (this.viewer) this.viewer.loadForm(param);
     } else if (route === 'responses') {
       if (mainNav) mainNav.style.display = '';
       if (previewAdminBar) previewAdminBar.classList.add('hidden');
       document.body.classList.remove('responder-mode');
       this.showSection('view-responses');
-      this.responsesDashboard.loadDashboard(param);
+      if (this.responsesDashboard) this.responsesDashboard.loadDashboard(param);
     } else {
       // Fallback
       window.location.hash = '#/dashboard';

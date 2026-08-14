@@ -24,6 +24,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Otomatis memperbarui parameter query cache buster (?v=COMMIT_SHA) pada script & CSS lokal
+      - name: Inject Cache Buster Version
+        run: |
+          BUILD_VER="${{ github.sha }}"
+          SHORT_VER="${BUILD_VER:0:8}"
+          sed -i -E "s/(\.js|\.css)(\?v=[^\"']*)?/\1?v=${SHORT_VER}/g" index.html form.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 

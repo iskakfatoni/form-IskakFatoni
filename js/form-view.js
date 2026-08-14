@@ -214,6 +214,10 @@ class FormViewer {
       this.questionsContainer.appendChild(emailCard);
     }
 
+    const stepQuestions = isMultiStep 
+      ? (this.currentForm.questions || []).filter(q => q.sectionId === currentSec.id)
+      : (this.currentForm.questions || []);
+
     if (stepQuestions.length === 0 && !(this.currentForm.collectEmail && this.currentStep === 0)) {
       const emptyNotice = document.createElement('div');
       emptyNotice.className = 'glass-card';
@@ -421,6 +425,15 @@ class FormViewer {
       }
     });
   }
+
+  collectCurrentStepAnswers() {
+    let isValid = true;
+    let firstErrorElement = null;
+    const currentSec = this.sections[this.currentStep] || this.sections[0];
+    const isMultiStep = this.sections.length > 1;
+    const stepQuestions = isMultiStep 
+      ? (this.currentForm.questions || []).filter(q => q.sectionId === currentSec.id)
+      : (this.currentForm.questions || []);
 
     // Validate email if collectEmail is true on step 0
     if (this.currentForm.collectEmail && this.currentStep === 0) {
