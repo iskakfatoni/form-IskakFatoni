@@ -32,7 +32,22 @@
 
   <!-- Background Decorative Ambient Glows -->
   <div class="ambient-glow glow-1"></div>
-  <div class="ambient-glow glow-2"></div>
+  <!-- FLOATING ADMIN PREVIEW BAR (Only visible to admin when previewing) -->
+  <div id="preview-admin-bar" class="preview-admin-bar glass hidden">
+    <div class="preview-bar-content">
+      <span class="preview-tag"><i data-lucide="eye"></i> Mode Preview Formulir</span>
+      <div class="preview-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-preview-back-editor">
+          <i data-lucide="edit-3"></i>
+          <span>Kembali ke Editor</span>
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="window.location.hash = '#/dashboard'">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Main Top Navigation -->
   <header id="main-nav" class="navbar glass">
@@ -344,9 +359,9 @@
                 <i data-lucide="rotate-ccw"></i>
                 <span>Kirim Tanggapan Lain</span>
               </button>
-              <button class="btn btn-ghost" onclick="window.location.hash = '#/dashboard'">
-                <span>Kembali ke Dashboard</span>
-              </button>
+            </div>
+            <div class="form-branding-badge">
+              <span>Ditenagai oleh <strong>FORM::IskakFatoni</strong></span>
             </div>
           </div>
         </div>

@@ -40,6 +40,9 @@ class App {
     const route = parts[0] || 'dashboard';
     const param = parts[1] || null;
 
+    const mainNav = document.getElementById('main-nav');
+    const previewAdminBar = document.getElementById('preview-admin-bar');
+
     // Update active nav link
     document.querySelectorAll('.nav-link').forEach(link => {
       link.classList.remove('active');
@@ -54,17 +57,46 @@ class App {
     const navBuilder = document.getElementById('nav-builder');
 
     if (route === 'dashboard' || route === '') {
+      if (mainNav) mainNav.style.display = '';
+      if (previewAdminBar) previewAdminBar.classList.add('hidden');
+      document.body.classList.remove('responder-mode');
       this.showSection('view-dashboard');
       if (navDashboard) navDashboard.classList.add('active');
       this.loadDashboard();
     } else if (route === 'builder') {
+      if (mainNav) mainNav.style.display = '';
+      if (previewAdminBar) previewAdminBar.classList.add('hidden');
+      document.body.classList.remove('responder-mode');
       this.showSection('view-builder');
       if (navBuilder) navBuilder.classList.add('active');
       this.builder.loadForm(param);
     } else if (route === 'view' || route === 'form') {
+      // HIDE main dashboard navbar so responder is 100% focused on the form
+      if (mainNav) mainNav.style.display = 'none';
+      document.body.classList.add('responder-mode');
+
+      // If viewing user is the logged in admin, show subtle floating preview bar
+      const isOwner = window.authManager && window.authManager.isLoggedIn();
+      if (previewAdminBar) {
+        if (isOwner) {
+          previewAdminBar.classList.remove('hidden');
+          const btnBackEdit = document.getElementById('btn-preview-back-editor');
+          if (btnBackEdit) {
+            btnBackEdit.onclick = () => {
+              window.location.hash = `#/builder/${param || ''}`;
+            };
+          }
+        } else {
+          previewAdminBar.classList.add('hidden');
+        }
+      }
+
       this.showSection('view-form');
       this.viewer.loadForm(param);
     } else if (route === 'responses') {
+      if (mainNav) mainNav.style.display = '';
+      if (previewAdminBar) previewAdminBar.classList.add('hidden');
+      document.body.classList.remove('responder-mode');
       this.showSection('view-responses');
       this.responsesDashboard.loadDashboard(param);
     } else {
