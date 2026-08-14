@@ -101,6 +101,16 @@
   font-weight: 700;
 }
 
+.live-email-hint {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.live-email-card {
+  border-left: 4px solid var(--primary);
+}
+
 /* Live Answer Controls */
 .live-input-text, .live-input-textarea {
   width: 100%;

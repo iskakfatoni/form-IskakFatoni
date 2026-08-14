@@ -109,13 +109,16 @@ class FormStorage {
 
   // --- RESPONSES CRUD ---
 
-  async submitResponse(formId, answers) {
+  async submitResponse(formId, answers, respondentEmail = null) {
     const timestamp = new Date().toISOString();
     const responseId = 'resp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+
+    const email = respondentEmail || (answers && answers._respondent_email ? answers._respondent_email : null);
 
     const responseRecord = {
       id: responseId,
       formId,
+      respondentEmail: email,
       answers,
       submittedAt: timestamp
     };

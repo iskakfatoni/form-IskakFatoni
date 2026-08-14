@@ -27,6 +27,7 @@ class FormBuilder {
     this.themeColorSwatches = document.querySelectorAll('.color-swatch');
     this.headerImgInput = document.getElementById('form-header-img');
     this.submitMsgInput = document.getElementById('form-submit-msg');
+    this.collectEmailCheck = document.getElementById('form-collect-email');
     this.allowMultipleCheck = document.getElementById('form-allow-multiple');
     this.isActiveCheck = document.getElementById('form-is-active');
   }
@@ -120,6 +121,7 @@ class FormBuilder {
         themeColor: '#6366f1',
         bannerUrl: '',
         submitMessage: 'Terima kasih! Tanggapan Anda telah berhasil direkam.',
+        collectEmail: false,
         allowMultiple: true,
         isActive: true,
         responseCount: 0,
@@ -192,6 +194,7 @@ class FormBuilder {
     // Update settings tab
     this.headerImgInput.value = this.currentForm.bannerUrl || '';
     this.submitMsgInput.value = this.currentForm.submitMessage || 'Terima kasih! Tanggapan Anda telah berhasil direkam.';
+    this.collectEmailCheck.checked = this.currentForm.collectEmail === true;
     this.allowMultipleCheck.checked = this.currentForm.allowMultiple !== false;
     this.isActiveCheck.checked = this.currentForm.isActive !== false;
 
@@ -728,6 +731,7 @@ class FormBuilder {
       themeColor,
       bannerUrl: this.headerImgInput.value.trim(),
       submitMessage: this.submitMsgInput.value.trim(),
+      collectEmail: this.collectEmailCheck.checked,
       allowMultiple: this.allowMultipleCheck.checked,
       isActive: this.isActiveCheck.checked,
       sections: this.sections,

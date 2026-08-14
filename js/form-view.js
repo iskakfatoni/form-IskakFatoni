@@ -188,12 +188,26 @@ class FormViewer {
       this.questionsContainer.appendChild(secHeaderCard);
     }
 
-    // Filter questions belonging to this section
-    const stepQuestions = isMultiStep 
-      ? (this.currentForm.questions || []).filter(q => q.sectionId === currentSec.id)
-      : (this.currentForm.questions || []);
+    // If collectEmail is enabled and we are on step 0 (Section 1), render standard Email Collector card at top
+    if (this.currentForm.collectEmail && this.currentStep === 0) {
+      const emailCard = document.createElement('div');
+      emailCard.className = 'live-question-card glass-card live-email-card';
+      emailCard.id = 'live-email-card';
+      emailCard.innerHTML = `
+        <div class="live-q-header">
+          <div class="live-q-title">
+            Email <span class="live-q-required-mark">*</span>
+          </div>
+          <div class="live-email-hint">Alamat email pengisi formulir</div>
+        </div>
+        <div class="live-email-input-wrap">
+          <input type="email" id="live-respondent-email" class="input-text live-input-text" placeholder="nama@email.com" autocomplete="email" required value="${this.escapeHtml(this.respondentEmail || '')}">
+        </div>
+      `;
+      this.questionsContainer.appendChild(emailCard);
+    }
 
-    if (stepQuestions.length === 0) {
+    if (stepQuestions.length === 0 && !(this.currentForm.collectEmail && this.currentStep === 0)) {
       const emptyNotice = document.createElement('div');
       emptyNotice.className = 'glass-card';
       emptyNotice.style.padding = '24px';
@@ -371,15 +385,25 @@ class FormViewer {
     });
   }
 
-  collectCurrentStepAnswers() {
-    const currentSec = this.sections[this.currentStep] || this.sections[0];
-    const isMultiStep = this.sections.length > 1;
-    const stepQuestions = isMultiStep 
-      ? (this.currentForm.questions || []).filter(q => q.sectionId === currentSec.id)
-      : (this.currentForm.questions || []);
+    // Validate email if collectEmail is true on step 0
+    if (this.currentForm.collectEmail && this.currentStep === 0) {
+      const emailInput = document.getElementById('live-respondent-email');
+      const emailCard = document.getElementById('live-email-card');
+      const emailVal = emailInput ? emailInput.value.trim() : '';
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    let isValid = true;
-    let firstErrorElement = null;
+      if (!emailVal || !emailRegex.test(emailVal)) {
+        isValid = false;
+        if (emailCard) {
+          emailCard.classList.add('has-error');
+          if (!firstErrorElement) firstErrorElement = emailCard;
+        }
+      } else {
+        if (emailCard) emailCard.classList.remove('has-error');
+        this.respondentEmail = emailVal;
+        this.answers._respondent_email = emailVal;
+      }
+    }
 
     stepQuestions.forEach(q => {
       const qCard = this.questionsContainer.querySelector(`[data-question-id="${q.id}"]`);
@@ -426,7 +450,13 @@ class FormViewer {
 
     if (!isValid && firstErrorElement) {
       firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      window.app.showToast('Harap lengkapi semua pertanyaan wajib pada bagian ini', 'error');
+      if (firstErrorElement.id === 'live-email-card') {
+        window.app.showToast('Harap masukkan alamat email yang valid', 'error');
+        const emailInput = document.getElementById('live-respondent-email');
+        if (emailInput) emailInput.focus();
+      } else {
+        window.app.showToast('Harap lengkapi semua pertanyaan wajib pada bagian ini', 'error');
+      }
       return false;
     }
 
@@ -483,7 +513,7 @@ class FormViewer {
     btnSubmit.innerHTML = '<span>Mengirim tanggapan...</span>';
 
     try {
-      await window.formStorage.submitResponse(this.currentForm.id, this.answers);
+      await window.formStorage.submitResponse(this.currentForm.id, this.answers, this.respondentEmail);
       
       // Show success screen
       this.formElement.classList.add('hidden');
@@ -502,6 +532,7 @@ class FormViewer {
   resetAnswers() {
     this.formElement.reset();
     this.answers = {};
+    this.respondentEmail = '';
     this.currentStep = 0;
     this.renderCurrentStep();
     window.scrollTo({ top: 0, behavior: 'smooth' });

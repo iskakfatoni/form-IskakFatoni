@@ -134,12 +134,14 @@ class ResponsesDashboard {
   renderTable() {
     const form = this.currentForm;
     const questions = form.questions || [];
+    const hasEmail = form.collectEmail || this.responses.some(r => !!r.respondentEmail || !!(r.answers && r.answers._respondent_email));
 
     // 1. Render Table Headers
     let headHtml = `
       <tr>
         <th style="width: 50px;">#</th>
-        <th style="min-width: 160px;">Waktu Kirim</th>
+        <th style="min-width: 150px;">Waktu Kirim</th>
+        ${hasEmail ? '<th style="min-width: 180px;">Email Responden</th>' : ''}
     `;
 
     questions.forEach((q, idx) => {
@@ -156,6 +158,7 @@ class ResponsesDashboard {
   renderTableRows() {
     const questions = this.currentForm.questions || [];
     const count = this.filteredResponses.length;
+    const hasEmail = this.currentForm.collectEmail || this.responses.some(r => !!r.respondentEmail || !!(r.answers && r.answers._respondent_email));
 
     if (count === 0) {
       this.tableBody.innerHTML = '';
@@ -175,10 +178,13 @@ class ResponsesDashboard {
         minute: '2-digit'
       }) : '-';
 
+      const emailStr = resp.respondentEmail || (resp.answers && resp.answers._respondent_email) || '-';
+
       bodyHtml += `
         <tr>
           <td><strong>${index + 1}</strong></td>
           <td style="color: var(--text-secondary); font-size: 0.85rem;">${dateStr}</td>
+          ${hasEmail ? `<td style="font-weight: 500; color: #818cf8;">${this.escapeHtml(emailStr)}</td>` : ''}
       `;
 
       questions.forEach(q => {

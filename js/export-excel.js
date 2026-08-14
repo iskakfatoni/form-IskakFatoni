@@ -17,9 +17,13 @@ class ExcelExporter {
 
     try {
       // 1. Prepare Header Row mapping
+      const hasEmail = form.collectEmail || responses.some(r => !!r.respondentEmail || !!(r.answers && r.answers._respondent_email));
       const headers = ['No', 'ID Respon', 'Waktu Pengisian (WIB/Lokal)'];
-      const questionMap = []; // { id, title }
+      if (hasEmail) {
+        headers.push('Email Responden');
+      }
 
+      const questionMap = []; // { id, title }
       form.questions.forEach((q, idx) => {
         const title = q.title || `Pertanyaan ${idx + 1}`;
         headers.push(title);
@@ -39,6 +43,12 @@ class ExcelExporter {
           timeStyle: 'medium'
         }) : '-';
         row.push(dateStr);
+
+        // Email
+        if (hasEmail) {
+          const emailVal = resp.respondentEmail || (resp.answers && resp.answers._respondent_email) || '-';
+          row.push(emailVal);
+        }
 
         // Answers
         questionMap.forEach(q => {
