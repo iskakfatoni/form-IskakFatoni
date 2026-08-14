@@ -23,12 +23,32 @@ class App {
     // Hash Routing Listener
     window.addEventListener('hashchange', () => this.handleRoute());
 
+    // Nav Builder Link (Create Blank Form)
+    const navBuilder = document.getElementById('nav-builder');
+    if (navBuilder) {
+      navBuilder.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.createNewForm();
+      });
+    }
+
     // Search on Dashboard
     const searchInput = document.getElementById('dashboard-search');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.filterDashboardForms(e.target.value.toLowerCase().trim());
       });
+    }
+  }
+
+  createNewForm() {
+    if (window.location.hash === '#/builder' || window.location.hash === '#/builder/') {
+      this.showSection('view-builder');
+      const navBuilder = document.getElementById('nav-builder');
+      if (navBuilder) navBuilder.classList.add('active');
+      this.builder.loadForm(null);
+    } else {
+      window.location.hash = '#/builder';
     }
   }
 

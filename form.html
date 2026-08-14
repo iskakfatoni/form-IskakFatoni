@@ -108,7 +108,7 @@
               Buat formulir kustom interaktif, bagikan tautan kepada responden, simpan data ke Firebase Cloud Firestore secara realtime, dan unduh data jawaban langsung dalam format Excel (.xlsx).
             </p>
             <div class="hero-cta-group">
-              <button class="btn btn-primary" onclick="window.location.hash = '#/builder'">
+              <button class="btn btn-primary" onclick="if (window.app) window.app.createNewForm(); else window.location.hash = '#/builder';">
                 <i data-lucide="plus"></i>
                 <span>Buat Formulir Baru</span>
               </button>
@@ -150,7 +150,7 @@
         </div>
         <h3>Belum Ada Formulir</h3>
         <p>Mulai buat formulir pertama Anda untuk mengumpulkan data dan mengekspor hasilnya ke Excel.</p>
-        <button class="btn btn-primary" onclick="window.location.hash = '#/builder'">
+        <button class="btn btn-primary" onclick="if (window.app) window.app.createNewForm(); else window.location.hash = '#/builder';">
           <i data-lucide="plus"></i>
           <span>Buat Form Sekarang</span>
         </button>
