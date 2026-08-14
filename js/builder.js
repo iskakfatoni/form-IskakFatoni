@@ -116,10 +116,15 @@ class FormBuilder {
   }
 
   switchTab(tab) {
-    document.getElementById('tab-btn-questions').classList.toggle('active', tab === 'questions');
-    document.getElementById('tab-btn-settings').classList.toggle('active', tab === 'settings');
-    document.getElementById('builder-panel-questions').classList.toggle('active', tab === 'questions');
-    document.getElementById('builder-panel-settings').classList.toggle('active', tab === 'settings');
+    const tabQuestions = document.getElementById('tab-btn-questions');
+    const tabSettings = document.getElementById('tab-btn-settings');
+    const panelQuestions = document.getElementById('builder-panel-questions');
+    const panelSettings = document.getElementById('builder-panel-settings');
+
+    if (tabQuestions) tabQuestions.classList.toggle('active', tab === 'questions');
+    if (tabSettings) tabSettings.classList.toggle('active', tab === 'settings');
+    if (panelQuestions) panelQuestions.classList.toggle('active', tab === 'questions');
+    if (panelSettings) panelSettings.classList.toggle('active', tab === 'settings');
   }
 
   setThemeColor(color) {
@@ -164,8 +169,8 @@ class FormBuilder {
         }
       ];
       this.renderForm();
-      this.statusBadge.textContent = 'Formulir Baru';
-      this.responsesTabLink.style.display = 'none';
+      if (this.statusBadge) this.statusBadge.textContent = 'Formulir Baru';
+      if (this.responsesTabLink) this.responsesTabLink.style.display = 'none';
       return;
     }
 
@@ -195,32 +200,36 @@ class FormBuilder {
         });
 
         this.renderForm();
-        this.statusBadge.textContent = 'Edit Formulir';
-        this.responsesTabLink.style.display = 'inline-flex';
-        this.responseCountBadge.textContent = form.responseCount || 0;
+        if (this.statusBadge) this.statusBadge.textContent = 'Edit Formulir';
+        if (this.responsesTabLink) this.responsesTabLink.style.display = 'inline-flex';
+        if (this.responseCountBadge) this.responseCountBadge.textContent = form.responseCount || 0;
       } else {
-        window.app.showToast('Formulir tidak ditemukan', 'error');
+        if (window.app && typeof window.app.showToast === 'function') {
+          window.app.showToast('Formulir tidak ditemukan', 'error');
+        }
         window.location.hash = '#/dashboard';
       }
     });
   }
 
   renderForm() {
-    this.titleInput.value = this.currentForm.title || '';
-    this.descInput.value = this.currentForm.description || '';
+    if (this.titleInput) this.titleInput.value = this.currentForm.title || '';
+    if (this.descInput) this.descInput.value = this.currentForm.description || '';
     this.setThemeColor(this.currentForm.themeColor || '#6366f1');
 
     // Update settings tab
-    this.headerImgInput.value = this.currentForm.bannerUrl || '';
-    this.submitMsgInput.value = this.currentForm.submitMessage || 'Terima kasih! Tanggapan Anda telah berhasil direkam.';
-    this.collectEmailCheck.checked = this.currentForm.collectEmail === true;
-    this.allowMultipleCheck.checked = this.currentForm.allowMultiple !== false;
-    this.isActiveCheck.checked = this.currentForm.isActive !== false;
+    if (this.headerImgInput) this.headerImgInput.value = this.currentForm.bannerUrl || '';
+    if (this.submitMsgInput) this.submitMsgInput.value = this.currentForm.submitMessage || 'Terima kasih! Tanggapan Anda telah berhasil direkam.';
+    if (this.collectEmailCheck) this.collectEmailCheck.checked = this.currentForm.collectEmail === true;
+    if (this.allowMultipleCheck) this.allowMultipleCheck.checked = this.currentForm.allowMultiple !== false;
+    if (this.isActiveCheck) this.isActiveCheck.checked = this.currentForm.isActive !== false;
 
     // Update active color swatch
-    this.themeColorSwatches.forEach(s => {
-      s.classList.toggle('active', s.dataset.color === (this.currentForm.themeColor || '#6366f1'));
-    });
+    if (this.themeColorSwatches) {
+      this.themeColorSwatches.forEach(s => {
+        s.classList.toggle('active', s.dataset.color === (this.currentForm.themeColor || '#6366f1'));
+      });
+    }
 
     this.renderQuestions();
   }
@@ -885,8 +894,8 @@ class FormBuilder {
   }
 
   async saveCurrentForm() {
-    const title = this.titleInput.value.trim() || 'Formulir Tanpa Judul';
-    const description = this.descInput.value.trim();
+    const title = (this.titleInput ? this.titleInput.value.trim() : '') || 'Formulir Tanpa Judul';
+    const description = this.descInput ? this.descInput.value.trim() : '';
 
     // Active theme color
     let themeColor = '#6366f1';
@@ -900,11 +909,11 @@ class FormBuilder {
       title,
       description,
       themeColor,
-      bannerUrl: this.headerImgInput.value.trim(),
-      submitMessage: this.submitMsgInput.value.trim(),
-      collectEmail: this.collectEmailCheck.checked,
-      allowMultiple: this.allowMultipleCheck.checked,
-      isActive: this.isActiveCheck.checked,
+      bannerUrl: this.headerImgInput ? this.headerImgInput.value.trim() : '',
+      submitMessage: this.submitMsgInput ? this.submitMsgInput.value.trim() : 'Terima kasih! Tanggapan Anda telah berhasil direkam.',
+      collectEmail: this.collectEmailCheck ? this.collectEmailCheck.checked : false,
+      allowMultiple: this.allowMultipleCheck ? this.allowMultipleCheck.checked : true,
+      isActive: this.isActiveCheck ? this.isActiveCheck.checked : true,
       sections: this.sections,
       questions: this.questions
     };
@@ -912,13 +921,17 @@ class FormBuilder {
     try {
       const saved = await window.formStorage.saveForm(formData);
       this.currentForm = saved;
-      this.statusBadge.textContent = 'Tersimpan';
-      this.responsesTabLink.style.display = 'inline-flex';
-      window.app.showToast('Formulir berhasil disimpan!', 'success');
+      if (this.statusBadge) this.statusBadge.textContent = 'Tersimpan';
+      if (this.responsesTabLink) this.responsesTabLink.style.display = 'inline-flex';
+      if (window.app && typeof window.app.showToast === 'function') {
+        window.app.showToast('Formulir berhasil disimpan!', 'success');
+      }
       return saved;
     } catch (err) {
       console.error(err);
-      window.app.showToast('Gagal menyimpan formulir: ' + err.message, 'error');
+      if (window.app && typeof window.app.showToast === 'function') {
+        window.app.showToast('Gagal menyimpan formulir: ' + err.message, 'error');
+      }
       return null;
     }
   }
