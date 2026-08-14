@@ -63,9 +63,19 @@ class App {
       this.showSection('view-builder');
       const navBuilder = document.getElementById('nav-builder');
       if (navBuilder) navBuilder.classList.add('active');
-      this.builder.loadForm(null);
+      if (this.builder) this.builder.loadForm(null);
     } else {
       window.location.hash = '#/builder';
+    }
+  }
+
+  createStudentBioTemplate() {
+    this.showSection('view-builder');
+    const navBuilder = document.getElementById('nav-builder');
+    if (navBuilder) navBuilder.classList.add('active');
+    window.location.hash = '#/builder';
+    if (this.builder) {
+      this.builder.loadStudentBioTemplate();
     }
   }
 

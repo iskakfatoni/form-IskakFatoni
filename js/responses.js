@@ -202,22 +202,41 @@ class ResponsesDashboard {
         let displayVal = '-';
 
         if (Array.isArray(ans)) {
-          displayVal = ans.join(', ');
+          displayVal = this.escapeHtml(ans.join(', '));
         } else if (ans !== null && ans !== undefined && ans !== '') {
-          if (q.type === 'rating') {
+          if (q.type === 'location') {
+            let locObj = ans;
+            if (typeof locObj === 'string' && locObj.startsWith('{')) {
+              try { locObj = JSON.parse(locObj); } catch(e){}
+            }
+            if (locObj && typeof locObj === 'object' && locObj.lat) {
+              const mapsUrl = locObj.mapsUrl || `https://www.google.com/maps?q=${locObj.lat},${locObj.lng}`;
+              displayVal = `
+                <a href="${mapsUrl}" target="_blank" class="table-gps-link" title="Buka Titik Rumah di Google Maps">
+                  <i data-lucide="map-pin"></i>
+                  <span>${locObj.lat.toFixed(5)}, ${locObj.lng.toFixed(5)}</span>
+                </a>
+              `;
+            } else {
+              displayVal = this.escapeHtml(String(ans));
+            }
+          } else if (q.type === 'rating') {
             displayVal = `⭐ ${ans} / 5`;
           } else {
             displayVal = this.escapeHtml(String(ans));
           }
         }
 
-        bodyHtml += `<td title="${displayVal}">${displayVal}</td>`;
+        bodyHtml += `<td title="${this.escapeHtml(typeof ans === 'object' ? JSON.stringify(ans) : String(ans || ''))}">${displayVal}</td>`;
       });
 
       bodyHtml += `</tr>`;
     });
 
     this.tableBody.innerHTML = bodyHtml;
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
   }
 
   escapeHtml(str) {

@@ -1012,3 +1012,38 @@ input:checked + .slider:before {
   border-top: 1px solid var(--border-color);
 }
 
+/* GPS Location Question Preview in Builder */
+.gps-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px dashed rgba(99, 102, 241, 0.4);
+  color: var(--primary);
+}
+
+.gps-preview-box i {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.gps-preview-box div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gps-preview-box strong {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.gps-preview-box span {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+

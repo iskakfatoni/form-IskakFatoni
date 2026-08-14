@@ -114,6 +114,10 @@
                 <i data-lucide="plus"></i>
                 <span>Buat Formulir Baru</span>
               </button>
+              <button class="btn btn-secondary" id="btn-template-biodata" onclick="if (window.app) window.app.createStudentBioTemplate();">
+                <i data-lucide="graduation-cap"></i>
+                <span>+ Template Biodata Siswa & GPS</span>
+              </button>
             </div>
           </div>
           <div class="hero-stats">
@@ -152,10 +156,16 @@
         </div>
         <h3>Belum Ada Formulir</h3>
         <p>Mulai buat formulir pertama Anda untuk mengumpulkan data dan mengekspor hasilnya ke Excel.</p>
-        <button class="btn btn-primary" onclick="if (window.app) window.app.createNewForm(); else window.location.hash = '#/builder';">
-          <i data-lucide="plus"></i>
-          <span>Buat Form Sekarang</span>
-        </button>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="if (window.app) window.app.createNewForm(); else window.location.hash = '#/builder';">
+            <i data-lucide="plus"></i>
+            <span>Buat Form Kosong</span>
+          </button>
+          <button class="btn btn-secondary" onclick="if (window.app) window.app.createStudentBioTemplate();">
+            <i data-lucide="graduation-cap"></i>
+            <span>Gunakan Template Biodata Siswa & GPS</span>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -253,6 +263,7 @@
               <button class="type-pill" data-type="text"><i data-lucide="type"></i> Teks</button>
               <button class="type-pill" data-type="choice"><i data-lucide="check-circle-2"></i> Pilihan</button>
               <button class="type-pill" data-type="checkbox"><i data-lucide="check-square"></i> Centang</button>
+              <button class="type-pill" data-type="location"><i data-lucide="map-pin"></i> Lokasi GPS</button>
               <button class="type-pill" data-type="rating"><i data-lucide="star"></i> Rating</button>
               <button class="type-pill" data-type="date"><i data-lucide="calendar"></i> Tanggal</button>
             </div>

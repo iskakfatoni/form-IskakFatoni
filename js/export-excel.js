@@ -53,7 +53,15 @@ class ExcelExporter {
         // Answers
         questionMap.forEach(q => {
           let ans = resp.answers ? resp.answers[q.id] : '';
-          if (Array.isArray(ans)) {
+          if (q.type === 'location' || (ans && typeof ans === 'object' && ans.lat)) {
+            let locObj = ans;
+            if (typeof locObj === 'string' && locObj.startsWith('{')) {
+              try { locObj = JSON.parse(locObj); } catch(e){}
+            }
+            if (locObj && typeof locObj === 'object' && locObj.lat) {
+              ans = `${locObj.lat}, ${locObj.lng} (https://www.google.com/maps?q=${locObj.lat},${locObj.lng})`;
+            }
+          } else if (Array.isArray(ans)) {
             ans = ans.join(', ');
           } else if (ans === undefined || ans === null) {
             ans = '-';

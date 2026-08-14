@@ -327,6 +327,45 @@ class FormViewer {
       inputHtml = `
         <input type="date" class="live-input-text" name="${qName}">
       `;
+    } else if (q.type === 'location') {
+      inputHtml = `
+        <div class="live-location-picker" data-question-id="${q.id}">
+          <div class="location-action-bar">
+            <button type="button" class="btn btn-secondary btn-detect-gps" id="btn-gps-${q.id}">
+              <i data-lucide="navigation"></i>
+              <span class="btn-gps-text">Ambil Titik Lokasi GPS Rumah</span>
+            </button>
+            <div class="gps-searching-indicator hidden">
+              <span class="pulse-dot"></span>
+              <span>Mencari sinyal satelit GPS...</span>
+            </div>
+          </div>
+
+          <div class="location-result-card hidden" id="gps-result-${q.id}">
+            <div class="location-coords-badge">
+              <div class="coords-icon-wrap">
+                <i data-lucide="map-pin"></i>
+              </div>
+              <div class="coords-info">
+                <div class="coords-title">Titik Koordinat Terekam</div>
+                <strong class="coords-latlng">-</strong>
+                <div class="coords-accuracy-tag">Akurasi: ± - m</div>
+              </div>
+            </div>
+            <div class="location-map-actions">
+              <a href="#" target="_blank" class="btn btn-secondary btn-xs btn-open-gmaps" title="Buka Titik Koordinat di Google Maps">
+                <i data-lucide="external-link"></i>
+                <span>Lihat di Google Maps</span>
+              </a>
+              <button type="button" class="btn btn-ghost btn-xs text-danger btn-reset-gps" title="Ulangi Deteksi Lokasi">
+                <i data-lucide="rotate-ccw"></i>
+                <span>Ulangi Ambil Lokasi</span>
+              </button>
+            </div>
+          </div>
+          <input type="hidden" name="${qName}" class="input-gps-hidden" value="">
+        </div>
+      `;
     } else if (q.type === 'time') {
       inputHtml = `
         <input type="time" class="live-input-text" name="${qName}">
@@ -359,6 +398,107 @@ class FormViewer {
       </div>
       <div class="error-msg">Pertanyaan ini wajib diisi.</div>
     `;
+
+    // Location / GPS Capture Handler
+    if (q.type === 'location') {
+      const btnDetect = card.querySelector('.btn-detect-gps');
+      const btnGpsText = card.querySelector('.btn-gps-text');
+      const indicator = card.querySelector('.gps-searching-indicator');
+      const resultCard = card.querySelector('.location-result-card');
+      const coordsText = card.querySelector('.coords-latlng');
+      const accuracyTag = card.querySelector('.coords-accuracy-tag');
+      const btnGmaps = card.querySelector('.btn-open-gmaps');
+      const btnResetGps = card.querySelector('.btn-reset-gps');
+      const hiddenInput = card.querySelector('.input-gps-hidden');
+
+      const applyLocationData = (locData) => {
+        if (!locData || !locData.lat) return;
+        this.answers[q.id] = locData;
+        hiddenInput.value = JSON.stringify(locData);
+        coordsText.textContent = `${locData.lat.toFixed(6)}, ${locData.lng.toFixed(6)}`;
+        accuracyTag.textContent = `Akurasi GPS: ± ${Math.round(locData.accuracy || 0)} meter`;
+        btnGmaps.href = locData.mapsUrl || `https://www.google.com/maps?q=${locData.lat},${locData.lng}`;
+        resultCard.classList.remove('hidden');
+        btnDetect.classList.add('hidden');
+        card.classList.remove('has-error');
+        if (window.lucide) window.lucide.createIcons();
+      };
+
+      if (btnDetect) {
+        btnDetect.addEventListener('click', () => {
+          if (!navigator.geolocation) {
+            alert('Perangkat atau browser Anda tidak mendukung fitur Geolocation GPS.');
+            return;
+          }
+
+          btnDetect.disabled = true;
+          if (btnGpsText) btnGpsText.textContent = 'Mendeteksi koordinat...';
+          if (indicator) indicator.classList.remove('hidden');
+
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              btnDetect.disabled = false;
+              if (btnGpsText) btnGpsText.textContent = 'Ambil Titik Lokasi GPS Rumah';
+              if (indicator) indicator.classList.add('hidden');
+
+              const lat = pos.coords.latitude;
+              const lng = pos.coords.longitude;
+              const accuracy = pos.coords.accuracy;
+              const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+              const locData = {
+                lat,
+                lng,
+                accuracy,
+                mapsUrl,
+                capturedAt: new Date().toISOString()
+              };
+
+              applyLocationData(locData);
+              if (window.app && typeof window.app.showToast === 'function') {
+                window.app.showToast(`Lokasi GPS berhasil terekam (Akurasi: ±${Math.round(accuracy)}m)`, 'success');
+              }
+            },
+            (err) => {
+              btnDetect.disabled = false;
+              if (btnGpsText) btnGpsText.textContent = 'Ambil Titik Lokasi GPS Rumah';
+              if (indicator) indicator.classList.add('hidden');
+
+              let errorMsg = 'Gagal mengakses GPS.';
+              switch (err.code) {
+                case err.PERMISSION_DENIED:
+                  errorMsg = 'Izin akses lokasi ditolak. Silakan izinkan akses lokasi/GPS pada pengaturan browser atau HP Anda.';
+                  break;
+                case err.POSITION_UNAVAILABLE:
+                  errorMsg = 'Informasi lokasi GPS tidak tersedia. Pastikan fitur Lokasi di HP Anda telah aktif.';
+                  break;
+                case err.TIMEOUT:
+                  errorMsg = 'Waktu permintaan GPS habis. Silakan coba tekan tombol ambil lokasi kembali.';
+                  break;
+              }
+              alert(errorMsg);
+              if (window.app && typeof window.app.showToast === 'function') {
+                window.app.showToast(errorMsg, 'error');
+              }
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 15000,
+              maximumAge: 0
+            }
+          );
+        });
+      }
+
+      if (btnResetGps) {
+        btnResetGps.addEventListener('click', () => {
+          delete this.answers[q.id];
+          hiddenInput.value = '';
+          resultCard.classList.add('hidden');
+          btnDetect.classList.remove('hidden');
+        });
+      }
+    }
 
     // Handle Rating click
     if (q.type === 'rating') {
@@ -403,7 +543,24 @@ class FormViewer {
       if (!qCard) return;
       const qName = `q_${q.id}`;
 
-      if (q.type === 'choice') {
+      if (q.type === 'location') {
+        const coordsText = qCard.querySelector('.coords-latlng');
+        const accuracyTag = qCard.querySelector('.coords-accuracy-tag');
+        const btnGmaps = qCard.querySelector('.btn-open-gmaps');
+        const resultCard = qCard.querySelector('.location-result-card');
+        const btnDetect = qCard.querySelector('.btn-detect-gps');
+        const hiddenInput = qCard.querySelector('.input-gps-hidden');
+
+        if (coordsText && typeof savedVal === 'object' && savedVal.lat) {
+          coordsText.textContent = `${savedVal.lat.toFixed(6)}, ${savedVal.lng.toFixed(6)}`;
+          if (accuracyTag) accuracyTag.textContent = `Akurasi GPS: ± ${Math.round(savedVal.accuracy || 0)} meter`;
+          if (btnGmaps) btnGmaps.href = savedVal.mapsUrl || `https://www.google.com/maps?q=${savedVal.lat},${savedVal.lng}`;
+          if (hiddenInput) hiddenInput.value = JSON.stringify(savedVal);
+          if (resultCard) resultCard.classList.remove('hidden');
+          if (btnDetect) btnDetect.classList.add('hidden');
+          if (window.lucide) window.lucide.createIcons();
+        }
+      } else if (q.type === 'choice') {
         const radio = qCard.querySelector(`input[name="${qName}"][value="${CSS.escape(savedVal)}"]`);
         if (radio) radio.checked = true;
       } else if (q.type === 'checkbox' && Array.isArray(savedVal)) {
@@ -468,7 +625,7 @@ class FormViewer {
         const checkedList = qCard.querySelectorAll(`input[name="${qName}"]:checked`);
         val = Array.from(checkedList).map(el => el.value);
         if (val.length === 0) val = [];
-      } else if (q.type === 'rating') {
+      } else if (q.type === 'location' || q.type === 'rating') {
         val = this.answers[q.id] || null;
       } else {
         const input = qCard.querySelector(`[name="${qName}"]`);
@@ -478,7 +635,9 @@ class FormViewer {
       // Validate required
       let isEmpty = false;
       if (q.required) {
-        if (q.type === 'checkbox' && (!val || val.length === 0)) {
+        if (q.type === 'location' && (!val || !val.lat)) {
+          isEmpty = true;
+        } else if (q.type === 'checkbox' && (!val || val.length === 0)) {
           isEmpty = true;
         } else if (q.type === 'rating' && !val) {
           isEmpty = true;

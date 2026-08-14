@@ -602,6 +602,16 @@ class FormBuilder {
           <span style="margin-left: 8px; font-size: 0.85rem;">(Skala 1 - 5 Bintang)</span>
         </div>
       `;
+    } else if (q.type === 'location') {
+      optionsHtml = `
+        <div class="gps-preview-box">
+          <i data-lucide="map-pin"></i>
+          <div>
+            <strong>Perekaman Titik Lokasi GPS & Peta</strong>
+            <span>Responden akan menekan tombol untuk mengambil koordinat GPS (Latitude, Longitude) dari perangkat mereka.</span>
+          </div>
+        </div>
+      `;
     } else if (q.type === 'paragraph') {
       optionsHtml = `<div class="text-preview-box">Teks jawaban panjang / paragraf responden...</div>`;
     } else if (q.type === 'date') {
@@ -635,6 +645,7 @@ class FormBuilder {
             <option value="choice" ${q.type === 'choice' ? 'selected' : ''}>Pilihan Ganda</option>
             <option value="checkbox" ${q.type === 'checkbox' ? 'selected' : ''}>Kotak Centang</option>
             <option value="dropdown" ${q.type === 'dropdown' ? 'selected' : ''}>Dropdown</option>
+            <option value="location" ${q.type === 'location' ? 'selected' : ''}>📍 Lokasi GPS / Koordinat</option>
             <option value="rating" ${q.type === 'rating' ? 'selected' : ''}>Rating Bintang</option>
             <option value="date" ${q.type === 'date' ? 'selected' : ''}>Tanggal</option>
             <option value="time" ${q.type === 'time' ? 'selected' : ''}>Waktu</option>
@@ -1124,6 +1135,114 @@ class FormBuilder {
         window.app.showToast('Gagal menyimpan formulir: ' + err.message, 'error');
       }
       return null;
+    }
+  }
+
+  loadStudentBioTemplate() {
+    this.switchTab('questions');
+    const sec1Id = 'sec_' + Date.now() + '_1';
+    const sec2Id = 'sec_' + Date.now() + '_2';
+
+    this.currentForm = {
+      id: null,
+      title: 'Formulir Biodata & Titik Lokasi Rumah Siswa',
+      description: 'Mohon lengkapi biodata siswa berikut dengan benar. Pastikan fitur GPS / Lokasi di HP Anda sudah aktif saat menekan tombol ambil titik lokasi rumah.',
+      themeColor: '#06b6d4',
+      bannerUrl: '',
+      submitMessage: 'Terima kasih! Biodata dan titik lokasi rumah siswa telah berhasil direkam.',
+      collectEmail: false,
+      allowMultiple: false,
+      isActive: true,
+      responseCount: 0,
+      sections: [
+        {
+          id: sec1Id,
+          title: 'Bagian 1: Data Pokok Siswa',
+          description: 'Isikan identitas lengkap peserta didik sesuai dokumen resmi (Akta / KK).'
+        },
+        {
+          id: sec2Id,
+          title: 'Bagian 2: Alamat & Perekaman Titik Rumah (GPS)',
+          description: 'Pastikan pengisian dilakukan di rumah atau gunakan GPS akurat dari HP Anda.'
+        }
+      ],
+      questions: [
+        {
+          id: 'q_' + Date.now() + '_nama',
+          sectionId: sec1Id,
+          type: 'text',
+          title: 'Nama Lengkap Siswa',
+          required: true
+        },
+        {
+          id: 'q_' + Date.now() + '_nisn',
+          sectionId: sec1Id,
+          type: 'number',
+          title: 'Nomor Induk Siswa Nasional (NISN)',
+          required: true
+        },
+        {
+          id: 'q_' + Date.now() + '_jk',
+          sectionId: sec1Id,
+          type: 'choice',
+          title: 'Jenis Kelamin',
+          required: true,
+          options: ['Laki-laki', 'Perempuan']
+        },
+        {
+          id: 'q_' + Date.now() + '_ttl',
+          sectionId: sec1Id,
+          type: 'text',
+          title: 'Tempat, Tanggal Lahir (Contoh: Surabaya, 12 Mei 2010)',
+          required: true
+        },
+        {
+          id: 'q_' + Date.now() + '_ortu',
+          sectionId: sec1Id,
+          type: 'text',
+          title: 'Nama Orang Tua / Wali',
+          required: true
+        },
+        {
+          id: 'q_' + Date.now() + '_wa',
+          sectionId: sec1Id,
+          type: 'text',
+          title: 'Nomor WhatsApp / HP Orang Tua (Aktif)',
+          required: true
+        },
+        {
+          id: 'q_' + Date.now() + '_alamat',
+          sectionId: sec2Id,
+          type: 'paragraph',
+          title: 'Alamat Lengkap Rumah (Jalan, RT/RW, Dusun/Desa, Kelurahan, Kecamatan, Kab/Kota)',
+          required: true
+        },
+        {
+          id: 'q_' + Date.now() + '_gps',
+          sectionId: sec2Id,
+          type: 'location',
+          title: 'Titik Lokasi GPS Rumah Siswa (Klik Ambil Titik Lokasi)',
+          required: true
+        },
+        {
+          id: 'q_' + Date.now() + '_patokan',
+          sectionId: sec2Id,
+          type: 'paragraph',
+          title: 'Patokan / Petunjuk Arah Menuju Rumah (Contoh: Sebelah utara Masjid Al-Ikhlas, pagar hijau)',
+          required: false
+        }
+      ]
+    };
+
+    this.sections = this.currentForm.sections;
+    this.questions = this.currentForm.questions;
+    this.renderForm();
+
+    if (this.statusBadge) this.statusBadge.textContent = 'Template Biodata Siswa';
+    if (this.responsesTabLink) this.responsesTabLink.style.display = 'none';
+
+    if (window.app && typeof window.app.showToast === 'function') {
+      window.app.showToast('Template Biodata Siswa & GPS berhasil dimuat! Anda dapat menyesuaikan atau langsung menyimpannya.', 'success');
     }
   }
 
