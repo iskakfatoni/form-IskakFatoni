@@ -123,15 +123,15 @@
         <!-- Right Hero Authentication Card -->
         <div id="hero-auth-container" class="hero-auth-container glass-card">
           
-          <!-- State 1: Logged Out Card (Login / Register) -->
+          <!-- State 1: Logged Out Card (Admin Login Portal) -->
           <div id="hero-auth-logged-out" class="hero-auth-box">
             <div class="auth-box-header">
               <div class="auth-icon-badge">
-                <i data-lucide="lock"></i>
+                <i data-lucide="shield-check"></i>
               </div>
               <div>
-                <h3 class="auth-box-title">Akses Pengelola Form</h3>
-                <p class="auth-box-subtitle">Masuk untuk membuat & mengelola formulir</p>
+                <h3 class="auth-box-title">Akses Admin (Iskak Fatoni)</h3>
+                <p class="auth-box-subtitle">Masuk untuk mengelola formulir & respon</p>
               </div>
             </div>
 
@@ -147,7 +147,7 @@
             </button>
 
             <div class="auth-divider">
-              <span>atau Masuk dengan Email</span>
+              <span>atau Masuk dengan Kata Sandi</span>
             </div>
 
             <!-- Firebase Email & Password Auth Form -->
@@ -155,24 +155,19 @@
               <div class="auth-input-group">
                 <div class="auth-field-wrap">
                   <i data-lucide="mail" class="input-icon"></i>
-                  <input type="email" id="auth-email-input" class="input-text auth-input" placeholder="Alamat Email (contoh: admin@gmail.com)" autocomplete="email" required>
+                  <input type="email" id="auth-email-input" class="input-text auth-input" value="iskakfatoni@gmail.com" readonly required style="opacity: 0.9; cursor: default;">
                 </div>
                 <div class="auth-field-wrap">
                   <i data-lucide="lock" class="input-icon"></i>
-                  <input type="password" id="auth-password-input" class="input-text auth-input" placeholder="Kata Sandi (minimal 6 karakter)" minlength="6" autocomplete="current-password" required>
+                  <input type="password" id="auth-password-input" class="input-text auth-input" placeholder="Masukkan Kata Sandi..." minlength="6" autocomplete="current-password" required>
                 </div>
               </div>
 
               <div class="auth-submit-row">
                 <button type="submit" id="btn-auth-submit" class="btn btn-primary btn-block">
                   <i data-lucide="log-in" id="auth-submit-icon"></i>
-                  <span id="auth-submit-label">Masuk dengan Email</span>
+                  <span id="auth-submit-label">Masuk ke Form Builder</span>
                 </button>
-              </div>
-
-              <div class="auth-toggle-row">
-                <span id="auth-toggle-text">Belum punya akun?</span>
-                <button type="button" id="btn-auth-mode-toggle" class="btn-link">Daftar Akun Baru</button>
               </div>
             </form>
           </div>

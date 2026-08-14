@@ -1,13 +1,14 @@
 /**
  * FORMCRAFT - Firebase Authentication Manager
- * Handles Firebase Auth (Google Sign-In, Email & Password Login / Registration),
- * session state listening, UI synchronization, and Route Protection (Auth Guard).
+ * Exclusively configured for the project owner: iskakfatoni@gmail.com
+ * Handles Google Sign-In, Email/Password Login, session guard, and UI synchronization.
  */
+
+const ALLOWED_ADMIN_EMAIL = "iskakfatoni@gmail.com";
 
 class AuthManager {
   constructor() {
     this.SESSION_KEY = 'formcraft_auth_session';
-    this.authMode = 'login'; // 'login' | 'register'
     this.currentUser = this.loadStoredUser();
     this.authCheckDone = false;
     this.initFirebaseAuthState();
@@ -31,28 +32,38 @@ class AuthManager {
     return path.includes('form.html');
   }
 
+  isOwner(email) {
+    if (!email) return false;
+    return email.toLowerCase().trim() === ALLOWED_ADMIN_EMAIL.toLowerCase();
+  }
+
   loadStoredUser() {
     try {
       const data = localStorage.getItem(this.SESSION_KEY);
-      return data ? JSON.parse(data) : null;
+      const user = data ? JSON.parse(data) : null;
+      if (user && this.isOwner(user.email)) {
+        return user;
+      }
+      return null;
     } catch (e) {
       return null;
     }
   }
 
   saveStoredUser(user) {
-    if (user) {
+    if (user && this.isOwner(user.email)) {
       localStorage.setItem(this.SESSION_KEY, JSON.stringify(user));
+      this.currentUser = user;
     } else {
       localStorage.removeItem(this.SESSION_KEY);
+      this.currentUser = null;
     }
-    this.currentUser = user;
     this.updateAuthUI();
-    window.dispatchEvent(new CustomEvent('auth-state-changed', { detail: { user } }));
+    window.dispatchEvent(new CustomEvent('auth-state-changed', { detail: { user: this.currentUser } }));
   }
 
   isLoggedIn() {
-    return !!this.currentUser;
+    return !!this.currentUser && this.isOwner(this.currentUser.email);
   }
 
   getCurrentUser() {
@@ -64,20 +75,24 @@ class AuthManager {
       this.auth.onAuthStateChanged(firebaseUser => {
         this.authCheckDone = true;
         if (firebaseUser) {
-          const userObj = {
-            uid: firebaseUser.uid,
-            name: firebaseUser.displayName || (firebaseUser.email ? firebaseUser.email.split('@')[0] : 'Admin'),
-            email: firebaseUser.email || '',
-            photoUrl: firebaseUser.photoURL || null,
-            provider: firebaseUser.providerData && firebaseUser.providerData[0] ? firebaseUser.providerData[0].providerId : 'firebase',
-            role: 'admin'
-          };
-          this.saveStoredUser(userObj);
-        } else {
-          // If no active firebase session and not a local demo user, clear stored session
-          if (this.currentUser && this.currentUser.provider !== 'demo') {
+          if (this.isOwner(firebaseUser.email)) {
+            const userObj = {
+              uid: firebaseUser.uid,
+              name: firebaseUser.displayName || 'Iskak Fatoni',
+              email: firebaseUser.email,
+              photoUrl: firebaseUser.photoURL || null,
+              provider: firebaseUser.providerData && firebaseUser.providerData[0] ? firebaseUser.providerData[0].providerId : 'firebase',
+              role: 'admin'
+            };
+            this.saveStoredUser(userObj);
+          } else {
+            // Not the owner -> Force logout
+            this.auth.signOut();
             this.saveStoredUser(null);
+            this.notify('Akses ditolak. Aplikasi ini khusus privat untuk pemilik (iskakfatoni@gmail.com).', 'error');
           }
+        } else {
+          this.saveStoredUser(null);
         }
         this.checkRouteGuard();
       });
@@ -88,8 +103,8 @@ class AuthManager {
   }
 
   /**
-   * Protects form.html so only logged in users can access Dashboard, Builder, and Responses.
-   * Public responder view (#/view/ or #/form/) is accessible to respondents.
+   * Protects form.html so only the authenticated owner can access Dashboard & Builder.
+   * Public responder views (#/view/ or #/form/) remain accessible to form respondents.
    */
   checkRouteGuard() {
     if (!this.isFormPage()) return;
@@ -100,16 +115,14 @@ class AuthManager {
     // Public respondent view is allowed
     if (isPublicView) return;
 
-    // Check if user is logged in
+    // Check if owner is logged in
     if (!this.isLoggedIn()) {
-      // If auth state check hasn't finished, wait briefly
       if (!this.authCheckDone) {
         setTimeout(() => this.checkRouteGuard(), 400);
         return;
       }
 
-      // Not logged in -> Redirect to index.html with notice
-      console.warn('Akses ditolak: Anda harus login untuk mengakses Form Builder.');
+      console.warn('Akses ditolak: Anda harus login sebagai admin untuk mengakses Form Builder.');
       window.location.replace('index.html?auth=required');
     }
   }
@@ -119,7 +132,7 @@ class AuthManager {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('auth') === 'required') {
         setTimeout(() => {
-          this.notify('Silakan masuk (login) terlebih dahulu untuk mengelola dan membuat formulir.', 'error');
+          this.notify('Silakan masuk sebagai admin untuk mengelola dan membuat formulir.', 'error');
           const heroAuth = document.getElementById('hero-email-login-form');
           if (heroAuth) {
             heroAuth.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -133,7 +146,6 @@ class AuthManager {
     if (window.app && typeof window.app.showToast === 'function') {
       window.app.showToast(message, type);
     } else {
-      // Fallback simple toast container for landing page if App() not initialized
       const container = document.getElementById('toast-container');
       if (container) {
         const toast = document.createElement('div');
@@ -155,7 +167,7 @@ class AuthManager {
 
   async loginWithGoogle() {
     if (!this.auth) {
-      this.notify('Firebase Auth belum aktif. Pastikan konfigurasi Firebase valid.', 'error');
+      this.notify('Firebase Auth belum siap. Pastikan koneksi online.', 'error');
       return null;
     }
 
@@ -163,18 +175,26 @@ class AuthManager {
       const provider = new firebase.auth.GoogleAuthProvider();
       const result = await this.auth.signInWithPopup(provider);
       const u = result.user;
+
+      // Restrict to project owner
+      if (!this.isOwner(u.email)) {
+        await this.auth.signOut();
+        this.saveStoredUser(null);
+        this.notify(`Akses ditolak untuk ${u.email}. Khusus akun pemilik (iskakfatoni@gmail.com).`, 'error');
+        return null;
+      }
+
       const userObj = {
         uid: u.uid,
-        name: u.displayName || (u.email ? u.email.split('@')[0] : 'Admin'),
+        name: u.displayName || 'Iskak Fatoni',
         email: u.email,
         photoUrl: u.photoURL,
         provider: 'google.com',
         role: 'admin'
       };
       this.saveStoredUser(userObj);
-      this.notify(`Selamat datang, ${userObj.name}! Mengalihkan ke Form Builder...`, 'success');
+      this.notify(`Selamat datang kembali, ${userObj.name}! Mengalihkan...`, 'success');
 
-      // Redirect if on landing page
       if (this.isLandingPage()) {
         setTimeout(() => {
           window.location.href = 'form.html#/dashboard';
@@ -190,7 +210,13 @@ class AuthManager {
 
   async handleEmailAuth(email, password) {
     if (!this.auth) {
-      this.notify('Firebase Auth belum aktif di browser. Cek koneksi Firebase Anda.', 'error');
+      this.notify('Firebase Auth belum siap di browser.', 'error');
+      return false;
+    }
+
+    const inputEmail = email.trim().toLowerCase();
+    if (!this.isOwner(inputEmail)) {
+      this.notify('Akses dibatasi hanya untuk akun administrator (iskakfatoni@gmail.com).', 'error');
       return false;
     }
 
@@ -200,49 +226,27 @@ class AuthManager {
 
     if (btnSubmit) {
       btnSubmit.disabled = true;
-      if (labelSpan) labelSpan.textContent = 'Memproses...';
+      if (labelSpan) labelSpan.textContent = 'Memverifikasi...';
     }
 
     try {
-      if (this.authMode === 'login') {
-        const cred = await this.auth.signInWithEmailAndPassword(email, password);
-        const u = cred.user;
-        const userObj = {
-          uid: u.uid,
-          name: u.displayName || (u.email ? u.email.split('@')[0] : 'Admin'),
-          email: u.email,
-          photoUrl: u.photoURL || null,
-          provider: 'password',
-          role: 'admin'
-        };
-        this.saveStoredUser(userObj);
-        this.notify(`Berhasil masuk sebagai ${userObj.email}! Mengalihkan...`, 'success');
+      const cred = await this.auth.signInWithEmailAndPassword(inputEmail, password);
+      const u = cred.user;
+      const userObj = {
+        uid: u.uid,
+        name: u.displayName || 'Iskak Fatoni',
+        email: u.email,
+        photoUrl: u.photoURL || null,
+        provider: 'password',
+        role: 'admin'
+      };
+      this.saveStoredUser(userObj);
+      this.notify(`Berhasil masuk sebagai ${userObj.name}! Mengalihkan...`, 'success');
 
-        if (this.isLandingPage()) {
-          setTimeout(() => {
-            window.location.href = 'form.html#/dashboard';
-          }, 600);
-        }
-      } else {
-        // Register new account
-        const cred = await this.auth.createUserWithEmailAndPassword(email, password);
-        const u = cred.user;
-        const userObj = {
-          uid: u.uid,
-          name: u.email ? u.email.split('@')[0] : 'Admin',
-          email: u.email,
-          photoUrl: null,
-          provider: 'password',
-          role: 'admin'
-        };
-        this.saveStoredUser(userObj);
-        this.notify(`Pendaftaran berhasil! Selamat datang, ${userObj.email}`, 'success');
-
-        if (this.isLandingPage()) {
-          setTimeout(() => {
-            window.location.href = 'form.html#/dashboard';
-          }, 600);
-        }
+      if (this.isLandingPage()) {
+        setTimeout(() => {
+          window.location.href = 'form.html#/dashboard';
+        }, 600);
       }
       return true;
     } catch (err) {
@@ -261,25 +265,15 @@ class AuthManager {
     let msg = 'Terjadi kesalahan autentikasi.';
     switch (err.code) {
       case 'auth/user-not-found':
-        msg = 'Akun belum terdaftar. Silakan klik "Daftar Akun Baru" di bawah untuk mendaftar.';
-        break;
       case 'auth/wrong-password':
-        msg = 'Kata sandi salah. Silakan periksa kembali kata sandi Anda.';
-        break;
       case 'auth/invalid-credential':
-        msg = 'Email/kata sandi salah atau akun belum didaftarkan. Jika baru pertama kali, klik "Daftar Akun Baru" di bawah.';
-        break;
-      case 'auth/email-already-in-use':
-        msg = 'Email ini sudah terdaftar. Silakan klik "Masuk di Sini" untuk login dengan kata sandi Anda.';
+        msg = 'Kata sandi atau kredensial salah. Silakan periksa kembali kata sandi Anda.';
         break;
       case 'auth/weak-password':
         msg = 'Kata sandi terlalu pendek. Gunakan minimal 6 karakter.';
         break;
       case 'auth/invalid-email':
         msg = 'Format alamat email tidak valid.';
-        break;
-      case 'auth/operation-not-allowed':
-        msg = 'Metode Email/Password belum diaktifkan di Firebase Console. Buka Authentication > Sign-in method > Email/Password lalu pilih Enable.';
         break;
       case 'auth/popup-closed-by-user':
         msg = 'Jendela login Google ditutup sebelum selesai.';
@@ -307,7 +301,6 @@ class AuthManager {
     this.saveStoredUser(null);
     this.notify('Anda telah berhasil keluar (Logout)', 'info');
 
-    // If logging out from form.html, redirect back to landing page
     if (this.isFormPage()) {
       setTimeout(() => {
         window.location.href = 'index.html';
@@ -315,32 +308,8 @@ class AuthManager {
     }
   }
 
-  toggleAuthMode() {
-    this.authMode = this.authMode === 'login' ? 'register' : 'login';
-    const labelSpan = document.getElementById('auth-submit-label');
-    const submitIcon = document.getElementById('auth-submit-icon');
-    const toggleText = document.getElementById('auth-toggle-text');
-    const toggleBtn = document.getElementById('btn-auth-mode-toggle');
-
-    if (this.authMode === 'login') {
-      if (labelSpan) labelSpan.textContent = 'Masuk dengan Email';
-      if (submitIcon) submitIcon.setAttribute('data-lucide', 'log-in');
-      if (toggleText) toggleText.textContent = 'Belum punya akun?';
-      if (toggleBtn) toggleBtn.textContent = 'Daftar Akun Baru';
-    } else {
-      if (labelSpan) labelSpan.textContent = 'Daftar Akun Baru';
-      if (submitIcon) submitIcon.setAttribute('data-lucide', 'user-plus');
-      if (toggleText) toggleText.textContent = 'Sudah punya akun?';
-      if (toggleBtn) toggleBtn.textContent = 'Masuk di Sini';
-    }
-
-    if (window.lucide) {
-      window.lucide.createIcons();
-    }
-  }
-
   bindEvents() {
-    // Hero Google Login Button
+    // Google Login Button
     const btnGoogleLogin = document.getElementById('btn-hero-google-login');
     if (btnGoogleLogin) {
       btnGoogleLogin.addEventListener('click', async () => {
@@ -352,7 +321,7 @@ class AuthManager {
       });
     }
 
-    // Hero Email & Password Form
+    // Email & Password Form
     const emailForm = document.getElementById('hero-email-login-form');
     if (emailForm) {
       emailForm.addEventListener('submit', (e) => {
@@ -369,15 +338,7 @@ class AuthManager {
       });
     }
 
-    // Toggle Login vs Register Mode
-    const toggleBtn = document.getElementById('btn-auth-mode-toggle');
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', () => {
-        this.toggleAuthMode();
-      });
-    }
-
-    // Hero Logout Button
+    // Logout Button
     const btnHeroLogout = document.getElementById('btn-hero-logout');
     if (btnHeroLogout) {
       btnHeroLogout.addEventListener('click', () => {
@@ -397,10 +358,10 @@ class AuthManager {
           if (this.isFormPage()) {
             window.location.href = 'index.html?auth=required';
           } else {
-            const emailInput = document.getElementById('auth-email-input');
-            if (emailInput) {
-              emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              emailInput.focus();
+            const passInput = document.getElementById('auth-password-input');
+            if (passInput) {
+              passInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              passInput.focus();
             }
           }
         }
@@ -415,7 +376,7 @@ class AuthManager {
 
   updateAuthUI() {
     const user = this.currentUser;
-    const isLogged = !!user;
+    const isLogged = this.isLoggedIn();
 
     // 1. Navbar Auth Pill
     const navAuthPill = document.getElementById('nav-user-auth-pill');
@@ -426,7 +387,7 @@ class AuthManager {
       if (isLogged) {
         navAuthPill.classList.remove('logged-out');
         navAuthPill.classList.add('logged-in');
-        navAuthText.textContent = user.name || (user.email ? user.email.split('@')[0] : 'Admin');
+        navAuthText.textContent = user.name || 'Iskak Fatoni';
         if (user.photoUrl && navAuthAvatar) {
           navAuthAvatar.innerHTML = `<img src="${user.photoUrl}" alt="Avatar" class="user-avatar-img">`;
         } else if (navAuthAvatar) {
@@ -453,8 +414,8 @@ class AuthManager {
       if (isLogged) {
         loggedOutCard.classList.add('hidden');
         loggedInCard.classList.remove('hidden');
-        if (heroUserName) heroUserName.textContent = user.name || (user.email ? user.email.split('@')[0] : 'Admin');
-        if (heroUserEmail) heroUserEmail.textContent = user.email || 'Akses Admin Terverifikasi';
+        if (heroUserName) heroUserName.textContent = user.name || 'Iskak Fatoni';
+        if (heroUserEmail) heroUserEmail.textContent = user.email || ALLOWED_ADMIN_EMAIL;
         if (heroUserAvatar) {
           if (user.photoUrl) {
             heroUserAvatar.innerHTML = `<img src="${user.photoUrl}" alt="Avatar" class="hero-avatar-img">`;
@@ -475,7 +436,7 @@ class AuthManager {
         heroCtaBtn.innerHTML = `<i data-lucide="layout-dashboard"></i><span>Buka Form Builder</span>`;
         heroCtaBtn.onclick = () => { window.location.href = 'form.html#/dashboard'; };
       } else {
-        heroCtaBtn.innerHTML = `<i data-lucide="arrow-right"></i><span>Mulai Buat Form Gratis</span>`;
+        heroCtaBtn.innerHTML = `<i data-lucide="arrow-right"></i><span>Masuk ke Form Builder</span>`;
         heroCtaBtn.onclick = () => {
           const el = document.getElementById('hero-auth-container');
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -483,7 +444,6 @@ class AuthManager {
       }
     }
 
-    // Re-initialize Lucide Icons if available
     if (window.lucide) {
       window.lucide.createIcons();
     }

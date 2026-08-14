@@ -67,13 +67,10 @@
           <span id="nav-user-auth-name" class="nav-user-name">Admin</span>
         </button>
 
-        <button id="btn-db-status" class="status-badge status-firebase" title="Status Database: Klik untuk konfigurasi Firebase">
+        <div id="btn-db-status" class="status-badge status-firebase" title="Terkoneksi ke Firebase Cloud Firestore">
           <span class="pulse-dot"></span>
-          <span id="db-status-text">Firebase Cloud</span>
-        </button>
-        <button id="btn-open-settings" class="icon-btn" title="Pengaturan Firebase">
-          <i data-lucide="settings"></i>
-        </button>
+          <span id="db-status-text">Firebase Online</span>
+        </div>
         <button id="btn-theme-toggle" class="icon-btn" title="Ganti Tema (Gelap/Terang)">
           <i data-lucide="sun" id="theme-icon"></i>
         </button>
@@ -98,10 +95,6 @@
               <button class="btn btn-primary" onclick="window.location.hash = '#/builder'">
                 <i data-lucide="plus"></i>
                 <span>Buat Formulir Baru</span>
-              </button>
-              <button class="btn btn-secondary" id="btn-quick-setup">
-                <i data-lucide="database"></i>
-                <span>Hubungkan Firebase</span>
               </button>
             </div>
           </div>
@@ -455,93 +448,6 @@
     </section>
 
   </main>
-
-  <!-- FIREBASE CONFIGURATION MODAL -->
-  <div id="modal-settings" class="modal-overlay hidden">
-    <div class="modal-card glass-card">
-      <div class="modal-header">
-        <div class="modal-title">
-          <i data-lucide="database"></i>
-          <h3>Konfigurasi Firebase Firestore</h3>
-        </div>
-        <button class="btn-close-modal" id="btn-close-settings">
-          <i data-lucide="x"></i>
-        </button>
-      </div>
-
-      <div class="modal-body">
-        <p class="modal-desc">
-          Hubungkan project Firebase Anda agar data formulir dan respon tersimpan di Cloud Firestore secara realtime dan dapat diakses dari mana saja.
-        </p>
-
-        <div class="setup-tabs">
-          <button class="setup-tab active" id="tab-cfg-form">Input Form</button>
-          <button class="setup-tab" id="tab-cfg-json">Paste JSON / Object</button>
-        </div>
-
-        <!-- Form Mode -->
-        <div id="cfg-mode-form" class="cfg-mode-section active">
-          <div class="form-group-grid">
-            <div class="form-group">
-              <label for="cfg-apiKey">API Key <span class="text-danger">*</span></label>
-              <input type="text" id="cfg-apiKey" class="input-text" placeholder="AIzaSy...">
-            </div>
-            <div class="form-group">
-              <label for="cfg-authDomain">Auth Domain</label>
-              <input type="text" id="cfg-authDomain" class="input-text" placeholder="project-id.firebaseapp.com">
-            </div>
-            <div class="form-group">
-              <label for="cfg-projectId">Project ID <span class="text-danger">*</span></label>
-              <input type="text" id="cfg-projectId" class="input-text" placeholder="my-forms-project">
-            </div>
-            <div class="form-group">
-              <label for="cfg-storageBucket">Storage Bucket</label>
-              <input type="text" id="cfg-storageBucket" class="input-text" placeholder="project-id.appspot.com">
-            </div>
-            <div class="form-group">
-              <label for="cfg-messagingSenderId">Messaging Sender ID</label>
-              <input type="text" id="cfg-messagingSenderId" class="input-text" placeholder="1234567890">
-            </div>
-            <div class="form-group">
-              <label for="cfg-appId">App ID <span class="text-danger">*</span></label>
-              <input type="text" id="cfg-appId" class="input-text" placeholder="1:1234567890:web:abcdef...">
-            </div>
-          </div>
-        </div>
-
-        <!-- JSON Mode -->
-        <div id="cfg-mode-json" class="cfg-mode-section">
-          <div class="form-group">
-            <label for="cfg-json-input">Paste Firebase Config Object:</label>
-            <textarea id="cfg-json-input" class="input-textarea" rows="6" placeholder='{
-  "apiKey": "...",
-  "authDomain": "...",
-  "projectId": "...",
-  "storageBucket": "...",
-  "messagingSenderId": "...",
-  "appId": "..."
-}'></textarea>
-          </div>
-        </div>
-
-        <div class="modal-info-box">
-          <i data-lucide="info"></i>
-          <div>
-            <strong>Catatan Keamanan & Hosting GitHub Pages:</strong>
-            <p>Konfigurasi disimpan secara aman di browser Anda (LocalStorage). Anda juga bisa langsung memasukkan konfigurasi default di berkas <code>js/firebase-config.js</code> sebelum upload ke GitHub.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-ghost" id="btn-use-local-demo">Gunakan Mode Lokal Demo</button>
-        <button class="btn btn-primary" id="btn-save-firebase-cfg">
-          <i data-lucide="check"></i>
-          <span>Simpan & Hubungkan</span>
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- SHARE LINK MODAL -->
   <div id="modal-share" class="modal-overlay hidden">

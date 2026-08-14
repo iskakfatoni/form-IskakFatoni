@@ -30,14 +30,6 @@ class App {
         this.filterDashboardForms(e.target.value.toLowerCase().trim());
       });
     }
-
-    // Quick setup button in hero
-    const btnQuickSetup = document.getElementById('btn-quick-setup');
-    if (btnQuickSetup) {
-      btnQuickSetup.addEventListener('click', () => {
-        this.openSettingsModal();
-      });
-    }
   }
 
   // --- SPA HASH ROUTING ---
@@ -240,73 +232,16 @@ class App {
     this.renderDashboardForms(filtered);
   }
 
-  // --- MODALS & SETTINGS ---
+  // --- MODALS & SHARE ---
 
   initModals() {
-    const modalSettings = document.getElementById('modal-settings');
     const modalShare = document.getElementById('modal-share');
-
-    // Open settings from status button & top nav icon
-    const btnOpenSettings = document.getElementById('btn-open-settings');
-    const btnDbStatus = document.getElementById('btn-db-status');
-
-    if (btnOpenSettings) btnOpenSettings.addEventListener('click', () => this.openSettingsModal());
-    if (btnDbStatus) btnDbStatus.addEventListener('click', () => this.openSettingsModal());
-
-    // Close settings
-    const btnCloseSettings = document.getElementById('btn-close-settings');
-    if (btnCloseSettings) {
-      btnCloseSettings.addEventListener('click', () => {
-        modalSettings.classList.add('hidden');
-      });
-    }
 
     // Close share
     const btnCloseShare = document.getElementById('btn-close-share');
     if (btnCloseShare) {
       btnCloseShare.addEventListener('click', () => {
-        modalShare.classList.add('hidden');
-      });
-    }
-
-    // Modal Tabs (Form vs JSON)
-    const tabCfgForm = document.getElementById('tab-cfg-form');
-    const tabCfgJson = document.getElementById('tab-cfg-json');
-    const modeForm = document.getElementById('cfg-mode-form');
-    const modeJson = document.getElementById('cfg-mode-json');
-
-    if (tabCfgForm && tabCfgJson) {
-      tabCfgForm.addEventListener('click', () => {
-        tabCfgForm.classList.add('active');
-        tabCfgJson.classList.remove('active');
-        modeForm.classList.add('active');
-        modeJson.classList.remove('active');
-      });
-      tabCfgJson.addEventListener('click', () => {
-        tabCfgJson.classList.add('active');
-        tabCfgForm.classList.remove('active');
-        modeJson.classList.add('active');
-        modeForm.classList.remove('active');
-      });
-    }
-
-    // Save Firebase Config Button
-    const btnSaveCfg = document.getElementById('btn-save-firebase-cfg');
-    if (btnSaveCfg) {
-      btnSaveCfg.addEventListener('click', () => this.saveFirebaseConfig());
-    }
-
-    // Use Local Demo Mode
-    const btnUseDemo = document.getElementById('btn-use-local-demo');
-    if (btnUseDemo) {
-      btnUseDemo.addEventListener('click', () => {
-        localStorage.removeItem('formcraft_firebase_config');
-        window.firebaseManager.config = {};
-        window.firebaseManager.isConfigured = false;
-        window.firebaseManager.updateStatusUI(false);
-        modalSettings.classList.add('hidden');
-        this.showToast('Beralih ke Mode Lokal Demo', 'info');
-        this.loadDashboard();
+        if (modalShare) modalShare.classList.add('hidden');
       });
     }
 
@@ -321,59 +256,6 @@ class App {
           this.showToast('Tautan formulir disalin ke clipboard!', 'success');
         }
       });
-    }
-  }
-
-  openSettingsModal() {
-    const modal = document.getElementById('modal-settings');
-    const cfg = window.firebaseManager.config || {};
-
-    document.getElementById('cfg-apiKey').value = cfg.apiKey || '';
-    document.getElementById('cfg-authDomain').value = cfg.authDomain || '';
-    document.getElementById('cfg-projectId').value = cfg.projectId || '';
-    document.getElementById('cfg-storageBucket').value = cfg.storageBucket || '';
-    document.getElementById('cfg-messagingSenderId').value = cfg.messagingSenderId || '';
-    document.getElementById('cfg-appId').value = cfg.appId || '';
-    document.getElementById('cfg-json-input').value = cfg.apiKey ? JSON.stringify(cfg, null, 2) : '';
-
-    modal.classList.remove('hidden');
-  }
-
-  saveFirebaseConfig() {
-    const isJsonMode = document.getElementById('tab-cfg-json').classList.contains('active');
-    let config = {};
-
-    if (isJsonMode) {
-      const jsonText = document.getElementById('cfg-json-input').value.trim();
-      try {
-        config = JSON.parse(jsonText);
-      } catch (e) {
-        this.showToast('Format JSON Firebase tidak valid: ' + e.message, 'error');
-        return;
-      }
-    } else {
-      config = {
-        apiKey: document.getElementById('cfg-apiKey').value.trim(),
-        authDomain: document.getElementById('cfg-authDomain').value.trim(),
-        projectId: document.getElementById('cfg-projectId').value.trim(),
-        storageBucket: document.getElementById('cfg-storageBucket').value.trim(),
-        messagingSenderId: document.getElementById('cfg-messagingSenderId').value.trim(),
-        appId: document.getElementById('cfg-appId').value.trim()
-      };
-    }
-
-    if (!config.apiKey || !config.projectId) {
-      this.showToast('Harap lengkapi setidaknya API Key dan Project ID!', 'error');
-      return;
-    }
-
-    const success = window.firebaseManager.saveConfig(config);
-    if (success) {
-      document.getElementById('modal-settings').classList.add('hidden');
-      this.showToast('Berhasil terhubung ke Firebase Cloud Firestore!', 'success');
-      this.loadDashboard();
-    } else {
-      this.showToast('Koneksi Firebase gagal diinisialisasi. Periksa config.', 'error');
     }
   }
 
