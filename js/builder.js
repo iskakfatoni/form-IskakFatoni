@@ -877,6 +877,7 @@ class FormBuilder {
                 }
               }
             }, 60);
+          }
         });
       }
 
