@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FORM::IskakFatoni - Form Builder & Dashboard</title>
+  <meta name="description" content="FORM::IskakFatoni - Form Builder interaktif, integrasi Firebase Firestore, dan export tanggapan ke Excel (.xlsx).">
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- SheetJS (xlsx) for Excel Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Firebase SDK (Modular via CDN Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <!-- Application Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/builder.css">
+  <link rel="stylesheet" href="css/form-view.css">
+  <link rel="stylesheet" href="css/responses.css">
+</head>
+<body class="theme-dark">
+
+  <!-- Background Decorative Ambient Glows -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <!-- Main Top Navigation -->
+  <header id="main-nav" class="navbar glass">
+    <div class="nav-container">
+      <div class="brand" onclick="window.location.hash = '#/dashboard'">
+        <div class="brand-icon">
+          <i data-lucide="sparkles"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">FORM::IskakFatoni</span>
+          <span class="brand-tag">Workspace</span>
+        </div>
+      </div>
+
+      <nav class="nav-links" id="nav-links">
+        <a href="#/dashboard" class="nav-link active" id="nav-dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#/builder" class="nav-link" id="nav-builder">
+          <i data-lucide="plus-circle"></i>
+          <span>Buat Form</span>
+        </a>
+      </nav>
+
+      <div class="nav-actions">
+        <!-- Auth Status / User Profile Button -->
+        <button id="nav-user-auth-pill" class="user-auth-pill logged-in" title="Klik untuk Keluar (Logout)">
+          <span id="nav-user-auth-avatar" class="nav-avatar-icon">
+            <i data-lucide="user-check"></i>
+          </span>
+          <span id="nav-user-auth-name" class="nav-user-name">Admin</span>
+        </button>
+
+        <button id="btn-db-status" class="status-badge status-firebase" title="Status Database: Klik untuk konfigurasi Firebase">
+          <span class="pulse-dot"></span>
+          <span id="db-status-text">Firebase Cloud</span>
+        </button>
+        <button id="btn-open-settings" class="icon-btn" title="Pengaturan Firebase">
+          <i data-lucide="settings"></i>
+        </button>
+        <button id="btn-theme-toggle" class="icon-btn" title="Ganti Tema (Gelap/Terang)">
+          <i data-lucide="sun" id="theme-icon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main App Viewport Container -->
+  <main id="app-viewport" class="container">
+
+    <!-- 1. DASHBOARD VIEW -->
+    <section id="view-dashboard" class="view-section active">
+      <div class="dashboard-hero-container">
+        <!-- Left Hero Content Info -->
+        <div class="dashboard-hero glass-card">
+          <div class="hero-content">
+            <h1 class="hero-title">Kelola & Buat Formulir <span class="gradient-text">Dengan Mudah</span></h1>
+            <p class="hero-desc">
+              Buat formulir kustom interaktif, bagikan tautan kepada responden, simpan data ke Firebase Cloud Firestore secara realtime, dan unduh data jawaban langsung dalam format Excel (.xlsx).
+            </p>
+            <div class="hero-cta-group">
+              <button class="btn btn-primary" onclick="window.location.hash = '#/builder'">
+                <i data-lucide="plus"></i>
+                <span>Buat Formulir Baru</span>
+              </button>
+              <button class="btn btn-secondary" id="btn-quick-setup">
+                <i data-lucide="database"></i>
+                <span>Hubungkan Firebase</span>
+              </button>
+            </div>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-box glass">
+              <div class="stat-number" id="stat-total-forms">0</div>
+              <div class="stat-label">Total Formulir</div>
+            </div>
+            <div class="stat-box glass">
+              <div class="stat-number" id="stat-total-responses">0</div>
+              <div class="stat-label">Total Respon</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <i data-lucide="folder" class="section-icon"></i>
+          <h2>Daftar Formulir Anda</h2>
+        </div>
+        <div class="search-wrap">
+          <i data-lucide="search" class="search-icon"></i>
+          <input type="text" id="dashboard-search" placeholder="Cari nama formulir..." class="input-search">
+        </div>
+      </div>
+
+      <!-- Forms Grid List -->
+      <div id="forms-grid" class="forms-grid">
+        <!-- Rendered dynamically via JS -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="forms-empty-state" class="empty-state glass-card hidden">
+        <div class="empty-icon-wrap">
+          <i data-lucide="clipboard-list"></i>
+        </div>
+        <h3>Belum Ada Formulir</h3>
+        <p>Mulai buat formulir pertama Anda untuk mengumpulkan data dan mengekspor hasilnya ke Excel.</p>
+        <button class="btn btn-primary" onclick="window.location.hash = '#/builder'">
+          <i data-lucide="plus"></i>
+          <span>Buat Form Sekarang</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. FORM BUILDER VIEW -->
+    <section id="view-builder" class="view-section">
+      <!-- Builder Top Actions Bar -->
+      <div class="builder-action-header glass">
+        <div class="builder-nav-left">
+          <button class="btn-back" onclick="window.location.hash = '#/dashboard'" title="Kembali ke Dashboard">
+            <i data-lucide="arrow-left"></i>
+          </button>
+          <div class="builder-status-tag" id="builder-status-badge">Form Baru</div>
+        </div>
+
+        <div class="builder-tabs">
+          <button class="builder-tab active" id="tab-btn-questions">
+            <i data-lucide="help-circle"></i>
+            <span>Pertanyaan</span>
+          </button>
+          <button class="builder-tab" id="tab-btn-settings">
+            <i data-lucide="sliders"></i>
+            <span>Pengaturan & Tema</span>
+          </button>
+          <button class="builder-tab" id="tab-btn-responses-link" style="display:none;">
+            <i data-lucide="bar-chart-2"></i>
+            <span>Respon (<span id="builder-response-count">0</span>)</span>
+          </button>
+        </div>
+
+        <div class="builder-nav-right">
+          <button class="btn btn-secondary btn-sm" id="btn-preview-form" title="Lihat Tampilan Responden">
+            <i data-lucide="eye"></i>
+            <span>Preview</span>
+          </button>
+          <button class="btn btn-primary btn-sm" id="btn-save-form">
+            <i data-lucide="save"></i>
+            <span>Simpan Form</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="builder-body-container">
+        <!-- Panel 1: Questions Editor -->
+        <div id="builder-panel-questions" class="builder-panel active">
+          
+          <!-- Form Header Card (Title & Description) -->
+          <div class="form-card header-card glass-card" id="form-header-card">
+            <div class="theme-accent-stripe" id="form-accent-stripe"></div>
+            <div class="card-content">
+              <input type="text" id="form-title-input" class="input-form-title" placeholder="Judul Formulir..." value="Formulir Tanpa Judul">
+              <textarea id="form-desc-input" class="input-form-desc" placeholder="Deskripsi atau petunjuk pengisian formulir..." rows="2"></textarea>
+            </div>
+          </div>
+
+          <!-- Dynamic Questions & Sections List Container -->
+          <div id="questions-container" class="questions-list">
+            <!-- Questions and Sections rendered via JS -->
+          </div>
+
+          <!-- Add Question & Section Floating / Bottom Bar -->
+          <div class="add-question-bar glass">
+            <div class="main-add-actions">
+              <button class="btn-add-q" id="btn-add-question" title="Tambah Pertanyaan Baru">
+                <i data-lucide="plus-circle"></i>
+                <span>Tambah Pertanyaan</span>
+              </button>
+              <button class="btn-add-sec" id="btn-add-section" title="Tambah Bagian/Halaman Baru">
+                <i data-lucide="layers"></i>
+                <span>Tambah Bagian</span>
+              </button>
+            </div>
+            <div class="quick-type-picker">
+              <span class="picker-label">Pilih Cepat:</span>
+              <button class="type-pill" data-type="text"><i data-lucide="type"></i> Teks</button>
+              <button class="type-pill" data-type="choice"><i data-lucide="check-circle-2"></i> Pilihan</button>
+              <button class="type-pill" data-type="checkbox"><i data-lucide="check-square"></i> Centang</button>
+              <button class="type-pill" data-type="rating"><i data-lucide="star"></i> Rating</button>
+              <button class="type-pill" data-type="date"><i data-lucide="calendar"></i> Tanggal</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 2: Form Settings & Theme -->
+        <div id="builder-panel-settings" class="builder-panel">
+          <div class="settings-grid">
+            <div class="settings-card glass-card">
+              <h3><i data-lucide="palette"></i> Kustomisasi Tema & Tampilan</h3>
+              <p class="settings-subtitle">Atur warna aksen dan banner formulir agar sesuai identitas Anda.</p>
+              
+              <div class="setting-item">
+                <label>Warna Aksen Formulir</label>
+                <div class="color-palette-picker" id="theme-color-picker">
+                  <button class="color-swatch active" data-color="#6366f1" style="background: #6366f1;"></button>
+                  <button class="color-swatch" data-color="#ec4899" style="background: #ec4899;"></button>
+                  <button class="color-swatch" data-color="#06b6d4" style="background: #06b6d4;"></button>
+                  <button class="color-swatch" data-color="#10b981" style="background: #10b981;"></button>
+                  <button class="color-swatch" data-color="#f59e0b" style="background: #f59e0b;"></button>
+                  <button class="color-swatch" data-color="#8b5cf6" style="background: #8b5cf6;"></button>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <label for="form-header-img">URL Gambar Header Banner (Opsional)</label>
+                <input type="url" id="form-header-img" class="input-text" placeholder="https://example.com/banner.jpg">
+              </div>
+            </div>
+
+            <div class="settings-card glass-card">
+              <h3><i data-lucide="shield-check"></i> Pengaturan Respon</h3>
+              <p class="settings-subtitle">Atur batasan dan pesan konfirmasi untuk responden.</p>
+              
+              <div class="setting-item">
+                <label for="form-submit-msg">Pesan Setelah Mengisi (Thank You Message)</label>
+                <input type="text" id="form-submit-msg" class="input-text" value="Terima kasih! Tanggapan Anda telah berhasil direkam.">
+              </div>
+
+              <div class="setting-item checkbox-setting">
+                <label class="custom-checkbox-label">
+                  <input type="checkbox" id="form-allow-multiple" checked>
+                  <span class="custom-box"></span>
+                  <span>Izinkan responden mengisi formulir lebih dari satu kali</span>
+                </label>
+              </div>
+
+              <div class="setting-item checkbox-setting">
+                <label class="custom-checkbox-label">
+                  <input type="checkbox" id="form-is-active" checked>
+                  <span class="custom-box"></span>
+                  <span>Formulir aktif menerima respon</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. RESPONDENT / FORM FILLER VIEW -->
+    <section id="view-form" class="view-section">
+      <div class="form-viewer-container">
+        <!-- Live Form Card -->
+        <div class="form-live-wrapper" id="form-live-wrapper">
+          <!-- Form Header -->
+          <div class="form-live-header glass-card" id="form-view-header-card">
+            <div class="live-accent-bar" id="form-view-accent-bar"></div>
+            <div id="form-view-banner-img" class="live-banner-img hidden"></div>
+            <div class="live-header-text">
+              <h1 id="form-view-title">Judul Formulir</h1>
+              <p id="form-view-desc">Deskripsi formulir</p>
+              <div class="required-indicator-text">* Menandakan pertanyaan yang wajib diisi</div>
+            </div>
+          </div>
+
+          <!-- Questions Live Form Body -->
+          <form id="form-live-element" class="form-live-body" onsubmit="return false;">
+            
+            <!-- Section Progress Bar (Visible if form has multiple sections) -->
+            <div id="form-section-progress-wrap" class="section-progress-wrap glass-card hidden">
+              <div class="progress-info-row">
+                <span id="section-progress-text" class="progress-step-text">Bagian 1 dari 2</span>
+                <span id="section-progress-percent" class="progress-pct-text">50%</span>
+              </div>
+              <div class="progress-track">
+                <div id="section-progress-bar" class="progress-fill" style="width: 50%;"></div>
+              </div>
+            </div>
+
+            <!-- Questions Container (Groups by Section) -->
+            <div id="form-view-questions" class="form-view-questions-list">
+              <!-- Rendered via JS -->
+            </div>
+
+            <!-- Form Multi-Step Navigation & Submit Buttons -->
+            <div class="form-submit-section glass-card">
+              <div class="step-nav-buttons">
+                <button type="button" id="btn-prev-step" class="btn btn-secondary hidden">
+                  <i data-lucide="chevron-left"></i>
+                  <span>Kembali</span>
+                </button>
+                <button type="button" id="btn-next-step" class="btn btn-primary hidden">
+                  <span>Berikutnya</span>
+                  <i data-lucide="chevron-right"></i>
+                </button>
+                <button type="submit" id="btn-submit-response" class="btn btn-primary btn-lg">
+                  <i data-lucide="send"></i>
+                  <span>Kirim Formulir</span>
+                </button>
+              </div>
+              <button type="button" id="btn-reset-form" class="btn btn-ghost btn-sm">
+                Kosongkan Formulir
+              </button>
+            </div>
+          </form>
+
+          <!-- Success Screen (Hidden initially) -->
+          <div id="form-view-success" class="form-success-card glass-card hidden">
+            <div class="success-icon-wrap">
+              <i data-lucide="check-circle"></i>
+            </div>
+            <h2>Tanggapan Terkirim!</h2>
+            <p id="form-view-success-message">Terima kasih! Tanggapan Anda telah berhasil disimpan.</p>
+            <div class="success-actions">
+              <button id="btn-submit-another" class="btn btn-secondary">
+                <i data-lucide="rotate-ccw"></i>
+                <span>Kirim Tanggapan Lain</span>
+              </button>
+              <button class="btn btn-ghost" onclick="window.location.hash = '#/dashboard'">
+                <span>Kembali ke Dashboard</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. RESPONSES & ANALYTICS DASHBOARD VIEW -->
+    <section id="view-responses" class="view-section">
+      <div class="responses-topbar glass">
+        <div class="responses-nav-left">
+          <button class="btn-back" onclick="window.location.hash = '#/dashboard'" title="Kembali ke Dashboard">
+            <i data-lucide="arrow-left"></i>
+          </button>
+          <div>
+            <h2 id="resp-page-title" class="resp-form-name">Ringkasan Respon</h2>
+            <span id="resp-page-subtitle" class="resp-count-badge">0 Tanggapan</span>
+          </div>
+        </div>
+
+        <div class="responses-nav-right">
+          <button class="btn btn-secondary btn-sm" id="btn-copy-form-share">
+            <i data-lucide="share-2"></i>
+            <span>Salin Link Form</span>
+          </button>
+          <button class="btn btn-excel btn-sm" id="btn-export-excel" title="Download data respon ke file Excel (.xlsx)">
+            <i data-lucide="file-spreadsheet"></i>
+            <span>Export ke Excel (.xlsx)</span>
+          </button>
+          <button class="btn btn-ghost btn-sm" id="btn-edit-form-from-resp" title="Edit Pertanyaan Formulir">
+            <i data-lucide="edit-3"></i>
+            <span>Edit Form</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="response-stats-row">
+        <div class="stat-card glass-card">
+          <div class="stat-icon-circle accent-indigo">
+            <i data-lucide="users"></i>
+          </div>
+          <div>
+            <div class="stat-val" id="resp-stat-total">0</div>
+            <div class="stat-lbl">Total Responden</div>
+          </div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-icon-circle accent-emerald">
+            <i data-lucide="clock"></i>
+          </div>
+          <div>
+            <div class="stat-val" id="resp-stat-latest">-</div>
+            <div class="stat-lbl">Respon Terakhir</div>
+          </div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-icon-circle accent-amber">
+            <i data-lucide="activity"></i>
+          </div>
+          <div>
+            <div class="stat-val" id="resp-stat-rate">100%</div>
+            <div class="stat-lbl">Status Formulir Aktif</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Responses Table Container -->
+      <div class="responses-table-card glass-card">
+        <div class="table-header-controls">
+          <div class="table-title">
+            <i data-lucide="table"></i>
+            <h3>Data Tanggapan Lengkap</h3>
+          </div>
+          <div class="table-actions">
+            <input type="text" id="resp-search-input" placeholder="Cari dalam jawaban..." class="input-search-sm">
+            <button class="btn btn-ghost btn-sm text-danger" id="btn-clear-all-responses" title="Hapus seluruh respon">
+              <i data-lucide="trash-2"></i>
+              <span>Hapus Semua Respon</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive-wrapper">
+          <table id="responses-data-table" class="modern-table">
+            <thead id="responses-table-head">
+              <!-- Dynamic columns -->
+            </thead>
+            <tbody id="responses-table-body">
+              <!-- Dynamic rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="responses-empty-table" class="table-empty hidden">
+          <i data-lucide="inbox"></i>
+          <p>Belum ada tanggapan yang masuk untuk formulir ini.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FIREBASE CONFIGURATION MODAL -->
+  <div id="modal-settings" class="modal-overlay hidden">
+    <div class="modal-card glass-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="database"></i>
+          <h3>Konfigurasi Firebase Firestore</h3>
+        </div>
+        <button class="btn-close-modal" id="btn-close-settings">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-desc">
+          Hubungkan project Firebase Anda agar data formulir dan respon tersimpan di Cloud Firestore secara realtime dan dapat diakses dari mana saja.
+        </p>
+
+        <div class="setup-tabs">
+          <button class="setup-tab active" id="tab-cfg-form">Input Form</button>
+          <button class="setup-tab" id="tab-cfg-json">Paste JSON / Object</button>
+        </div>
+
+        <!-- Form Mode -->
+        <div id="cfg-mode-form" class="cfg-mode-section active">
+          <div class="form-group-grid">
+            <div class="form-group">
+              <label for="cfg-apiKey">API Key <span class="text-danger">*</span></label>
+              <input type="text" id="cfg-apiKey" class="input-text" placeholder="AIzaSy...">
+            </div>
+            <div class="form-group">
+              <label for="cfg-authDomain">Auth Domain</label>
+              <input type="text" id="cfg-authDomain" class="input-text" placeholder="project-id.firebaseapp.com">
+            </div>
+            <div class="form-group">
+              <label for="cfg-projectId">Project ID <span class="text-danger">*</span></label>
+              <input type="text" id="cfg-projectId" class="input-text" placeholder="my-forms-project">
+            </div>
+            <div class="form-group">
+              <label for="cfg-storageBucket">Storage Bucket</label>
+              <input type="text" id="cfg-storageBucket" class="input-text" placeholder="project-id.appspot.com">
+            </div>
+            <div class="form-group">
+              <label for="cfg-messagingSenderId">Messaging Sender ID</label>
+              <input type="text" id="cfg-messagingSenderId" class="input-text" placeholder="1234567890">
+            </div>
+            <div class="form-group">
+              <label for="cfg-appId">App ID <span class="text-danger">*</span></label>
+              <input type="text" id="cfg-appId" class="input-text" placeholder="1:1234567890:web:abcdef...">
+            </div>
+          </div>
+        </div>
+
+        <!-- JSON Mode -->
+        <div id="cfg-mode-json" class="cfg-mode-section">
+          <div class="form-group">
+            <label for="cfg-json-input">Paste Firebase Config Object:</label>
+            <textarea id="cfg-json-input" class="input-textarea" rows="6" placeholder='{
+  "apiKey": "...",
+  "authDomain": "...",
+  "projectId": "...",
+  "storageBucket": "...",
+  "messagingSenderId": "...",
+  "appId": "..."
+}'></textarea>
+          </div>
+        </div>
+
+        <div class="modal-info-box">
+          <i data-lucide="info"></i>
+          <div>
+            <strong>Catatan Keamanan & Hosting GitHub Pages:</strong>
+            <p>Konfigurasi disimpan secara aman di browser Anda (LocalStorage). Anda juga bisa langsung memasukkan konfigurasi default di berkas <code>js/firebase-config.js</code> sebelum upload ke GitHub.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="btn-use-local-demo">Gunakan Mode Lokal Demo</button>
+        <button class="btn btn-primary" id="btn-save-firebase-cfg">
+          <i data-lucide="check"></i>
+          <span>Simpan & Hubungkan</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHARE LINK MODAL -->
+  <div id="modal-share" class="modal-overlay hidden">
+    <div class="modal-card glass-card share-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="share-2"></i>
+          <h3>Bagikan Formulir</h3>
+        </div>
+        <button class="btn-close-modal" id="btn-close-share">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Kirimkan tautan berikut ke responden untuk mulai mengisi formulir:</p>
+        <div class="share-input-group">
+          <input type="text" id="share-link-input" class="input-text share-input" readonly>
+          <button class="btn btn-primary" id="btn-copy-share-url">
+            <i data-lucide="copy"></i>
+            <span>Salin</span>
+          </button>
+        </div>
+        <div class="share-qr-preview">
+          <a id="share-open-link" href="#" target="_blank" class="btn btn-secondary btn-sm">
+            <i data-lucide="external-link"></i>
+            <span>Buka di Tab Baru</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Application Logic Modules -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/export-excel.js"></script>
+  <script src="js/builder.js"></script>
+  <script src="js/form-view.js"></script>
+  <script src="js/responses.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
