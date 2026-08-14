@@ -553,16 +553,33 @@ class FormBuilder {
     if (q.type === 'choice' || q.type === 'checkbox' || q.type === 'dropdown') {
       const icon = q.type === 'choice' ? 'circle' : (q.type === 'checkbox' ? 'square' : 'chevron-down');
       const options = q.options || ['Opsi 1'];
+      const canBranch = (q.type === 'choice' || q.type === 'dropdown') && this.sections && this.sections.length > 1;
+
       optionsHtml = `
         <div class="question-options-container">
           ${options.map((opt, optIdx) => {
             const optText = typeof opt === 'object' ? (opt.text || '') : opt;
             const optImg = typeof opt === 'object' ? (opt.imageUrl || '') : '';
+            const optNext = typeof opt === 'object' ? (opt.nextSectionId || 'next') : 'next';
+
             return `
               <div class="option-row" data-opt-index="${optIdx}">
                 <i data-lucide="${icon}" class="option-type-icon"></i>
                 <input type="text" class="input-option-text" value="${this.escapeHtml(optText)}" placeholder="Nama opsi (Bisa paste list Excel/Sheets)...">
                 
+                ${canBranch ? `
+                  <div class="opt-branch-wrap" title="Aksi lanjut setelah opsi ini dipilih">
+                    <i data-lucide="corner-down-right" class="branch-icon"></i>
+                    <select class="select-opt-branch">
+                      <option value="next" ${(!optNext || optNext === 'next') ? 'selected' : ''}>Lanjut bagian berikutnya</option>
+                      ${this.sections.map((s, sIdx) => `
+                        <option value="${s.id}" ${optNext === s.id ? 'selected' : ''}>Buka Bagian ${sIdx + 1}: ${this.escapeHtml(s.title || 'Tanpa Judul')}</option>
+                      `).join('')}
+                      <option value="submit" ${optNext === 'submit' ? 'selected' : ''}>Kirim formulir</option>
+                    </select>
+                  </div>
+                ` : ''}
+
                 <button type="button" class="btn-opt-image ${optImg ? 'has-image' : ''}" title="Upload Gambar Pilihan Jawaban">
                   <i data-lucide="image"></i>
                 </button>
@@ -860,6 +877,21 @@ class FormBuilder {
                 }
               }
             }, 60);
+        });
+      }
+
+      // Branch / Logic Jump Select
+      const branchSelect = row.querySelector('.select-opt-branch');
+      if (branchSelect) {
+        branchSelect.addEventListener('change', (e) => {
+          if (!q.options) q.options = [];
+          if (typeof q.options[optIdx] === 'object') {
+            q.options[optIdx].nextSectionId = e.target.value;
+          } else {
+            q.options[optIdx] = {
+              text: q.options[optIdx] || `Opsi ${optIdx + 1}`,
+              nextSectionId: e.target.value
+            };
           }
         });
       }

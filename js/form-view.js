@@ -86,6 +86,7 @@ class FormViewer {
   async loadForm(formId) {
     this.answers = {};
     this.currentStep = 0;
+    this.historyStack = [0];
     this.successCard.classList.add('hidden');
     this.formElement.classList.remove('hidden');
 
@@ -892,10 +893,54 @@ class FormViewer {
   handleNextStep() {
     if (!this.collectCurrentStepAnswers()) return;
 
-    if (this.currentStep < this.sections.length - 1) {
-      this.currentStep++;
+    const currentSec = this.sections[this.currentStep] || this.sections[0];
+    const isMultiStep = this.sections.length > 1;
+    const stepQuestions = isMultiStep 
+      ? (this.currentForm.questions || []).filter(q => q.sectionId === currentSec.id)
+      : (this.currentForm.questions || []);
+
+    let branchAction = 'next';
+
+    // Check questions in current step for choice / dropdown logic jumps
+    for (const q of stepQuestions) {
+      if ((q.type === 'choice' || q.type === 'dropdown') && q.options && q.options.length > 0) {
+        const ansVal = this.answers[q.id];
+        if (ansVal) {
+          const matchedOpt = q.options.find(opt => {
+            const text = typeof opt === 'object' ? opt.text : opt;
+            return text === ansVal;
+          });
+
+          if (matchedOpt && typeof matchedOpt === 'object' && matchedOpt.nextSectionId && matchedOpt.nextSectionId !== 'next') {
+            branchAction = matchedOpt.nextSectionId;
+            break;
+          }
+        }
+      }
+    }
+
+    if (branchAction === 'submit') {
+      this.handleSubmit();
+      return;
+    }
+
+    let nextStepIndex = this.currentStep + 1;
+    if (branchAction !== 'next') {
+      const targetIdx = this.sections.findIndex(s => s.id === branchAction);
+      if (targetIdx !== -1) {
+        nextStepIndex = targetIdx;
+      }
+    }
+
+    if (nextStepIndex < this.sections.length) {
+      if (!this.historyStack) this.historyStack = [0];
+      this.historyStack.push(nextStepIndex);
+      this.currentStep = nextStepIndex;
       this.renderCurrentStep();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Reached the end
+      this.handleSubmit();
     }
   }
 
@@ -923,7 +968,14 @@ class FormViewer {
       }
     });
 
-    if (this.currentStep > 0) {
+    if (!this.historyStack) this.historyStack = [0];
+
+    if (this.historyStack.length > 1) {
+      this.historyStack.pop();
+      this.currentStep = this.historyStack[this.historyStack.length - 1];
+      this.renderCurrentStep();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (this.currentStep > 0) {
       this.currentStep--;
       this.renderCurrentStep();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -960,6 +1012,7 @@ class FormViewer {
     this.answers = {};
     this.respondentEmail = '';
     this.currentStep = 0;
+    this.historyStack = [0];
     this.renderCurrentStep();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }

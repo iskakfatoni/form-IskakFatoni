@@ -406,6 +406,49 @@
   transition: color var(--transition-fast);
 }
 
+.btn-remove-option:hover {
+  color: var(--accent-rose);
+}
+
+/* Branching / Section Logic Jump Dropdown */
+.opt-branch-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px dashed rgba(99, 102, 241, 0.35);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  flex-shrink: 0;
+  max-width: 210px;
+}
+
+.branch-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.select-opt-branch {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  max-width: 180px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select-opt-branch option {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+
 /* Question Image & Title Wrap */
 .q-title-wrap {
   display: flex;
