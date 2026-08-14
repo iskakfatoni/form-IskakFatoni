@@ -204,8 +204,29 @@
           <!-- Form Header Card (Title & Description) -->
           <div class="form-card header-card glass-card" id="form-header-card">
             <div class="theme-accent-stripe" id="form-accent-stripe"></div>
+            
+            <!-- Quick Header Banner Display inside Question Editor -->
+            <div id="form-header-banner-preview" class="header-card-banner-wrap hidden">
+              <img id="form-header-banner-img" src="" alt="Banner Formulir" class="header-card-banner-img">
+              <div class="header-card-banner-actions">
+                <button type="button" class="btn btn-secondary btn-xs" id="btn-quick-change-banner" title="Ganti Gambar Banner">
+                  <i data-lucide="refresh-cw"></i>
+                  <span>Ganti Banner</span>
+                </button>
+                <button type="button" class="btn btn-ghost btn-xs text-danger" id="btn-quick-remove-banner" title="Hapus Gambar Banner">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </div>
+            </div>
+
             <div class="card-content">
-              <input type="text" id="form-title-input" class="input-form-title" placeholder="Judul Formulir..." value="Formulir Tanpa Judul">
+              <div class="header-card-top-row">
+                <input type="text" id="form-title-input" class="input-form-title" placeholder="Judul Formulir..." value="Formulir Tanpa Judul">
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-add-header-banner" title="Tambahkan Gambar Banner Formulir">
+                  <i data-lucide="image-plus"></i>
+                  <span>+ Banner</span>
+                </button>
+              </div>
               <textarea id="form-desc-input" class="input-form-desc" placeholder="Deskripsi atau petunjuk pengisian formulir..." rows="2"></textarea>
             </div>
           </div>
@@ -257,9 +278,44 @@
                 </div>
               </div>
 
+              <!-- Full Banner Uploader Section in Settings -->
               <div class="setting-item">
-                <label for="form-header-img">URL Gambar Header Banner (Opsional)</label>
-                <input type="url" id="form-header-img" class="input-text" placeholder="https://example.com/banner.jpg">
+                <label>Gambar Header Banner</label>
+                <div class="banner-uploader-container">
+                  <div id="banner-dropzone" class="banner-dropzone">
+                    <i data-lucide="image-plus" class="banner-dropzone-icon"></i>
+                    <div class="banner-dropzone-text">
+                      <strong>Upload Gambar Banner Formulir</strong>
+                      <span>Disarankan rasio lanskap (~1600 x 400 px), otomatis dikompresi</span>
+                    </div>
+                    <button type="button" id="btn-browse-banner" class="btn btn-secondary btn-sm">
+                      <i data-lucide="upload"></i>
+                      <span>Pilih Gambar</span>
+                    </button>
+                    <input type="file" id="input-banner-file" accept="image/*" style="display: none;">
+                  </div>
+
+                  <div id="banner-preview-box" class="banner-preview-box hidden">
+                    <div class="banner-preview-img-wrap">
+                      <img id="banner-preview-img" src="" alt="Banner Formulir" class="banner-preview-img">
+                    </div>
+                    <div class="banner-preview-actions">
+                      <button type="button" id="btn-change-banner" class="btn btn-secondary btn-xs">
+                        <i data-lucide="refresh-cw"></i>
+                        <span>Ganti Banner</span>
+                      </button>
+                      <button type="button" id="btn-remove-banner" class="btn btn-ghost btn-xs text-danger">
+                        <i data-lucide="trash-2"></i>
+                        <span>Hapus Banner</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="setting-sub-item" style="margin-top: 10px;">
+                  <label for="form-header-img" style="font-size: 0.8rem; color: var(--text-muted);">Atau URL Gambar Banner:</label>
+                  <input type="url" id="form-header-img" class="input-text input-sm" placeholder="https://example.com/banner.jpg">
+                </div>
               </div>
             </div>
 

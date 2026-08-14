@@ -23,13 +23,29 @@ class FormBuilder {
     this.responseCountBadge = document.getElementById('builder-response-count');
     this.responsesTabLink = document.getElementById('tab-btn-responses-link');
 
-    // Settings fields
+    // Settings fields & Banner uploader
     this.themeColorSwatches = document.querySelectorAll('.color-swatch');
     this.headerImgInput = document.getElementById('form-header-img');
     this.submitMsgInput = document.getElementById('form-submit-msg');
     this.collectEmailCheck = document.getElementById('form-collect-email');
     this.allowMultipleCheck = document.getElementById('form-allow-multiple');
     this.isActiveCheck = document.getElementById('form-is-active');
+
+    // Banner elements in Settings panel
+    this.bannerDropzone = document.getElementById('banner-dropzone');
+    this.bannerPreviewBox = document.getElementById('banner-preview-box');
+    this.bannerPreviewImg = document.getElementById('banner-preview-img');
+    this.inputBannerFile = document.getElementById('input-banner-file');
+    this.btnBrowseBanner = document.getElementById('btn-browse-banner');
+    this.btnChangeBanner = document.getElementById('btn-change-banner');
+    this.btnRemoveBanner = document.getElementById('btn-remove-banner');
+
+    // Quick Banner controls in Questions Header card
+    this.btnAddHeaderBanner = document.getElementById('btn-add-header-banner');
+    this.headerBannerPreview = document.getElementById('form-header-banner-preview');
+    this.headerBannerImg = document.getElementById('form-header-banner-img');
+    this.btnQuickChangeBanner = document.getElementById('btn-quick-change-banner');
+    this.btnQuickRemoveBanner = document.getElementById('btn-quick-remove-banner');
   }
 
   bindEvents() {
@@ -66,6 +82,86 @@ class FormBuilder {
           const color = swatch.dataset.color;
           this.setThemeColor(color);
         });
+      });
+    }
+
+    // Banner Upload Events
+    if (this.btnBrowseBanner && this.inputBannerFile) {
+      this.btnBrowseBanner.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.inputBannerFile.click();
+      });
+    }
+
+    if (this.bannerDropzone && this.inputBannerFile) {
+      this.bannerDropzone.addEventListener('click', () => {
+        this.inputBannerFile.click();
+      });
+
+      this.bannerDropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        this.bannerDropzone.classList.add('drag-over');
+      });
+
+      this.bannerDropzone.addEventListener('dragleave', () => {
+        this.bannerDropzone.classList.remove('drag-over');
+      });
+
+      this.bannerDropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        this.bannerDropzone.classList.remove('drag-over');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          this.handleBannerUpload(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    if (this.inputBannerFile) {
+      this.inputBannerFile.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          this.handleBannerUpload(e.target.files[0]);
+        }
+      });
+    }
+
+    if (this.btnChangeBanner && this.inputBannerFile) {
+      this.btnChangeBanner.addEventListener('click', () => {
+        this.inputBannerFile.click();
+      });
+    }
+
+    if (this.btnRemoveBanner) {
+      this.btnRemoveBanner.addEventListener('click', () => {
+        this.removeBanner();
+      });
+    }
+
+    // Quick Banner Buttons on Header Card
+    if (this.btnAddHeaderBanner && this.inputBannerFile) {
+      this.btnAddHeaderBanner.addEventListener('click', () => {
+        this.inputBannerFile.click();
+      });
+    }
+
+    if (this.btnQuickChangeBanner && this.inputBannerFile) {
+      this.btnQuickChangeBanner.addEventListener('click', () => {
+        this.inputBannerFile.click();
+      });
+    }
+
+    if (this.btnQuickRemoveBanner) {
+      this.btnQuickRemoveBanner.addEventListener('click', () => {
+        this.removeBanner();
+      });
+    }
+
+    // External URL Banner Input manual change
+    if (this.headerImgInput) {
+      this.headerImgInput.addEventListener('input', (e) => {
+        if (this.currentForm) {
+          this.currentForm.bannerUrl = e.target.value.trim();
+          this.updateBannerUI();
+        }
       });
     }
 
@@ -231,7 +327,102 @@ class FormBuilder {
       });
     }
 
+    // Update banner UI state
+    this.updateBannerUI();
+
     this.renderQuestions();
+  }
+
+  updateBannerUI() {
+    const bannerUrl = (this.currentForm && this.currentForm.bannerUrl) ? this.currentForm.bannerUrl.trim() : '';
+
+    // 1. Settings Tab Banner UI
+    if (this.bannerDropzone && this.bannerPreviewBox && this.bannerPreviewImg) {
+      if (bannerUrl) {
+        this.bannerDropzone.classList.add('hidden');
+        this.bannerPreviewBox.classList.remove('hidden');
+        this.bannerPreviewImg.src = bannerUrl;
+      } else {
+        this.bannerDropzone.classList.remove('hidden');
+        this.bannerPreviewBox.classList.add('hidden');
+        this.bannerPreviewImg.src = '';
+      }
+    }
+
+    // 2. Header Card in Questions Tab
+    if (this.headerBannerPreview && this.headerBannerImg && this.btnAddHeaderBanner) {
+      if (bannerUrl) {
+        this.headerBannerPreview.classList.remove('hidden');
+        this.headerBannerImg.src = bannerUrl;
+        this.btnAddHeaderBanner.classList.add('hidden');
+      } else {
+        this.headerBannerPreview.classList.add('hidden');
+        this.headerBannerImg.src = '';
+        this.btnAddHeaderBanner.classList.remove('hidden');
+      }
+    }
+
+    // 3. Sync text input
+    if (this.headerImgInput) {
+      this.headerImgInput.value = bannerUrl;
+    }
+
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  }
+
+  async handleBannerUpload(file) {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      if (window.app && typeof window.app.showToast === 'function') {
+        window.app.showToast('Harap pilih file gambar (JPG, PNG, WEBP)', 'error');
+      }
+      return;
+    }
+
+    if (window.app && typeof window.app.showToast === 'function') {
+      window.app.showToast('Mengompresi & mengunggah gambar banner...', 'info');
+    }
+
+    try {
+      const formId = this.currentForm ? (this.currentForm.id || 'form_' + Date.now()) : 'form_' + Date.now();
+      const result = await window.imageUploader.processAndUpload(file, {
+        formId,
+        context: 'banner',
+        maxWidth: 1600,
+        quality: 0.85
+      });
+
+      if (!this.currentForm) {
+        this.currentForm = {};
+      }
+      this.currentForm.bannerUrl = result.url;
+      this.updateBannerUI();
+
+      if (window.app && typeof window.app.showToast === 'function') {
+        window.app.showToast('Gambar banner berhasil diunggah!', 'success');
+      }
+    } catch (err) {
+      console.error('Error upload banner:', err);
+      if (window.app && typeof window.app.showToast === 'function') {
+        window.app.showToast('Gagal memproses gambar banner: ' + err.message, 'error');
+      }
+    }
+  }
+
+  removeBanner() {
+    if (this.currentForm) {
+      this.currentForm.bannerUrl = '';
+    }
+    this.updateBannerUI();
+    if (this.inputBannerFile) {
+      this.inputBannerFile.value = '';
+    }
+    if (window.app && typeof window.app.showToast === 'function') {
+      window.app.showToast('Gambar banner telah dihapus', 'info');
+    }
   }
 
   renderQuestions() {
