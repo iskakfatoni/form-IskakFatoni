@@ -636,4 +636,175 @@ body.responder-mode .container {
   color: #818cf8;
 }
 
+/* ==========================================================================
+   LIVE FILE / PHOTO UPLOADER STYLES
+   ========================================================================== */
+
+.live-file-uploader {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.file-dropzone-box {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 20px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.file-dropzone-box:hover {
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.file-dropzone-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--primary);
+}
+
+.file-dropzone-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.file-dropzone-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.file-preview-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+}
+
+.file-preview-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-thumb-img {
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.file-meta-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.file-meta-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.file-meta-size {
+  font-size: 0.75rem;
+  color: var(--accent-emerald);
+}
+
+/* ==========================================================================
+   LIVE SIGNATURE PAD STYLES
+   ========================================================================== */
+
+.live-signature-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signature-pad-box {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 160px;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  overflow: hidden;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.signature-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.signature-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.signature-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 480px;
+}
+
+.signature-status-tag {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   OFFICIAL PRINTABLE RECEIPT / PDF LAYOUT
+   ========================================================================== */
+
+#print-receipt-frame {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt-container, #printable-receipt-container * {
+    visibility: visible;
+  }
+  #printable-receipt-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    padding: 24px;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+
 

@@ -612,6 +612,26 @@ class FormBuilder {
           </div>
         </div>
       `;
+    } else if (q.type === 'file') {
+      optionsHtml = `
+        <div class="file-preview-box">
+          <i data-lucide="camera"></i>
+          <div>
+            <strong>Upload Foto / Berkas (Kamera & Galeri)</strong>
+            <span>Responden dapat mengambil foto langsung dari kamera HP atau memilih file dari galeri.</span>
+          </div>
+        </div>
+      `;
+    } else if (q.type === 'signature') {
+      optionsHtml = `
+        <div class="signature-preview-box">
+          <i data-lucide="pen-tool"></i>
+          <div>
+            <strong>Tanda Tangan Digital</strong>
+            <span>Responden dapat membubuhkan tanda tangan langsung dengan jari di layar sentuh HP atau mouse.</span>
+          </div>
+        </div>
+      `;
     } else if (q.type === 'paragraph') {
       optionsHtml = `<div class="text-preview-box">Teks jawaban panjang / paragraf responden...</div>`;
     } else if (q.type === 'date') {
@@ -646,6 +666,8 @@ class FormBuilder {
             <option value="checkbox" ${q.type === 'checkbox' ? 'selected' : ''}>Kotak Centang</option>
             <option value="dropdown" ${q.type === 'dropdown' ? 'selected' : ''}>Dropdown</option>
             <option value="location" ${q.type === 'location' ? 'selected' : ''}>📍 Lokasi GPS / Koordinat</option>
+            <option value="file" ${q.type === 'file' ? 'selected' : ''}>📸 Upload Foto / Berkas</option>
+            <option value="signature" ${q.type === 'signature' ? 'selected' : ''}>✍️ Tanda Tangan Digital</option>
             <option value="rating" ${q.type === 'rating' ? 'selected' : ''}>Rating Bintang</option>
             <option value="date" ${q.type === 'date' ? 'selected' : ''}>Tanggal</option>
             <option value="time" ${q.type === 'time' ? 'selected' : ''}>Waktu</option>
@@ -1197,6 +1219,13 @@ class FormBuilder {
           required: true
         },
         {
+          id: 'q_' + Date.now() + '_foto_siswa',
+          sectionId: sec1Id,
+          type: 'file',
+          title: 'Pas Foto Siswa (3x4 / Bebas Rapi)',
+          required: true
+        },
+        {
           id: 'q_' + Date.now() + '_ortu',
           sectionId: sec1Id,
           type: 'text',
@@ -1225,11 +1254,25 @@ class FormBuilder {
           required: true
         },
         {
+          id: 'q_' + Date.now() + '_foto_rumah',
+          sectionId: sec2Id,
+          type: 'file',
+          title: 'Foto Tampak Depan Rumah Siswa',
+          required: false
+        },
+        {
           id: 'q_' + Date.now() + '_patokan',
           sectionId: sec2Id,
           type: 'paragraph',
           title: 'Patokan / Petunjuk Arah Menuju Rumah (Contoh: Sebelah utara Masjid Al-Ikhlas, pagar hijau)',
           required: false
+        },
+        {
+          id: 'q_' + Date.now() + '_ttd',
+          sectionId: sec2Id,
+          type: 'signature',
+          title: 'Tanda Tangan Digital Orang Tua / Wali Siswa',
+          required: true
         }
       ]
     };

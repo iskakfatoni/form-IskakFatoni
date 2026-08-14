@@ -19,6 +19,9 @@
   <!-- SheetJS (xlsx) for Excel Export -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+  <!-- QRCode.js for Form Link QR Code Generator -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
   <!-- Firebase SDK (Modular via CDN Compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -264,6 +267,8 @@
               <button class="type-pill" data-type="choice"><i data-lucide="check-circle-2"></i> Pilihan</button>
               <button class="type-pill" data-type="checkbox"><i data-lucide="check-square"></i> Centang</button>
               <button class="type-pill" data-type="location"><i data-lucide="map-pin"></i> Lokasi GPS</button>
+              <button class="type-pill" data-type="file"><i data-lucide="camera"></i> Upload Foto</button>
+              <button class="type-pill" data-type="signature"><i data-lucide="pen-tool"></i> Tanda Tangan</button>
               <button class="type-pill" data-type="rating"><i data-lucide="star"></i> Rating</button>
               <button class="type-pill" data-type="date"><i data-lucide="calendar"></i> Tanggal</button>
             </div>
@@ -433,6 +438,10 @@
             <h2>Tanggapan Terkirim!</h2>
             <p id="form-view-success-message">Terima kasih! Tanggapan Anda telah berhasil disimpan.</p>
             <div class="success-actions">
+              <button id="btn-print-receipt" class="btn btn-primary" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">
+                <i data-lucide="printer"></i>
+                <span>Cetak / Simpan Bukti Pendaftaran (PDF)</span>
+              </button>
               <button id="btn-submit-another" class="btn btn-secondary">
                 <i data-lucide="rotate-ccw"></i>
                 <span>Kirim Tanggapan Lain</span>
@@ -462,7 +471,7 @@
         <div class="responses-nav-right">
           <button class="btn btn-secondary btn-sm" id="btn-copy-form-share">
             <i data-lucide="share-2"></i>
-            <span>Salin Link Form</span>
+            <span>Bagikan / QR Code</span>
           </button>
           <button class="btn btn-excel btn-sm" id="btn-export-excel" title="Download data respon ke file Excel (.xlsx)">
             <i data-lucide="file-spreadsheet"></i>
@@ -542,32 +551,55 @@
 
   </main>
 
-  <!-- SHARE LINK MODAL -->
+  <!-- SHARE LINK & QR CODE MODAL -->
   <div id="modal-share" class="modal-overlay hidden">
     <div class="modal-card glass-card share-card">
       <div class="modal-header">
         <div class="modal-title">
           <i data-lucide="share-2"></i>
-          <h3>Bagikan Formulir</h3>
+          <h3>Bagikan Formulir & QR Code</h3>
         </div>
         <button class="btn-close-modal" id="btn-close-share">
           <i data-lucide="x"></i>
         </button>
       </div>
       <div class="modal-body">
-        <p class="modal-desc">Kirimkan tautan berikut ke responden untuk mulai mengisi formulir:</p>
+        <p class="modal-desc">Salin tautan formulir, bagikan langsung via WhatsApp, atau cetak QR Code berikut:</p>
+        
+        <!-- URL Input & Copy -->
         <div class="share-input-group">
           <input type="text" id="share-link-input" class="input-text share-input" readonly>
           <button class="btn btn-primary" id="btn-copy-share-url">
             <i data-lucide="copy"></i>
-            <span>Salin</span>
+            <span>Salin Link</span>
           </button>
         </div>
-        <div class="share-qr-preview">
-          <a id="share-open-link" href="#" target="_blank" class="btn btn-secondary btn-sm">
+
+        <!-- WhatsApp Quick Share -->
+        <div style="margin-top: 12px; display: flex; gap: 10px;">
+          <a id="btn-share-whatsapp" href="#" target="_blank" class="btn btn-sm" style="background: #25D366; color: white; flex: 1; justify-content: center; font-weight: 600;">
+            <i data-lucide="message-circle"></i>
+            <span>Kirim via WhatsApp</span>
+          </a>
+          <a id="share-open-link" href="#" target="_blank" class="btn btn-secondary btn-sm" style="flex: 1; justify-content: center;">
             <i data-lucide="external-link"></i>
             <span>Buka di Tab Baru</span>
           </a>
+        </div>
+
+        <!-- Dynamic QR Code Container -->
+        <div class="share-qr-section" style="margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-color); text-align: center;">
+          <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; color: var(--text-secondary);">
+            <i data-lucide="qr-code" style="width: 16px; height: 16px; vertical-align: -2px;"></i>
+            QR Code Formulir (Scan & Cetak)
+          </div>
+          <div id="share-qrcode-container" style="display: inline-block; padding: 12px; background: #ffffff; border-radius: var(--radius-md); box-shadow: 0 4px 15px rgba(0,0,0,0.15);"></div>
+          <div style="margin-top: 10px;">
+            <button type="button" id="btn-download-qrcode" class="btn btn-ghost btn-xs">
+              <i data-lucide="download"></i>
+              <span>Download QR Code (.png)</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

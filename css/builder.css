@@ -1046,4 +1046,39 @@ input:checked + .slider:before {
   color: var(--text-muted);
 }
 
+/* File Upload Question Preview in Builder */
+.file-preview-box, .signature-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px dashed rgba(99, 102, 241, 0.4);
+  color: var(--primary);
+}
+
+.file-preview-box i, .signature-preview-box i {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.file-preview-box div, .signature-preview-box div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.file-preview-box strong, .signature-preview-box strong {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.file-preview-box span, .signature-preview-box span {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+
 

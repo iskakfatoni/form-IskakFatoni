@@ -336,20 +336,77 @@ class App {
         }
       });
     }
+
+    // Download QR Code Button
+    const btnDownloadQr = document.getElementById('btn-download-qrcode');
+    if (btnDownloadQr) {
+      btnDownloadQr.addEventListener('click', () => {
+        const qrContainer = document.getElementById('share-qrcode-container');
+        const img = qrContainer ? qrContainer.querySelector('img, canvas') : null;
+        if (img) {
+          let dataUrl = '';
+          if (img.tagName.toLowerCase() === 'canvas') {
+            dataUrl = img.toDataURL('image/png');
+          } else {
+            dataUrl = img.src;
+          }
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          a.download = `qrcode_form_${Date.now()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          this.showToast('QR Code berhasil diunduh!', 'success');
+        }
+      });
+    }
   }
 
   openShareModal(formId) {
     const modal = document.getElementById('modal-share');
     const input = document.getElementById('share-link-input');
     const openLink = document.getElementById('share-open-link');
+    const btnWhatsApp = document.getElementById('btn-share-whatsapp');
+    const qrContainer = document.getElementById('share-qrcode-container');
 
     // Build URL using full current origin + pathname + hash
     const baseUrl = window.location.href.split('#')[0];
     const fullShareUrl = `${baseUrl}#/view/${formId}`;
 
-    input.value = fullShareUrl;
-    openLink.href = fullShareUrl;
-    modal.classList.remove('hidden');
+    if (input) input.value = fullShareUrl;
+    if (openLink) openLink.href = fullShareUrl;
+
+    // WhatsApp text
+    const formTitle = (this.dashboardForms && this.dashboardForms.find(f => f.id === formId)?.title) || 'Formulir Online';
+    const waText = `Halo! Silakan mengisi *${formTitle}* melalui tautan berikut:\n\n${fullShareUrl}`;
+    if (btnWhatsApp) {
+      btnWhatsApp.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
+    }
+
+    // Render QR Code
+    if (qrContainer) {
+      qrContainer.innerHTML = '';
+      if (window.QRCode) {
+        try {
+          new QRCode(qrContainer, {
+            text: fullShareUrl,
+            width: 140,
+            height: 140,
+            colorDark: '#0f172a',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        } catch (e) {
+          console.warn('QRCode error, fallback to SVG:', e);
+          qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(fullShareUrl)}" width="140" height="140" alt="QR Code">`;
+        }
+      } else {
+        qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(fullShareUrl)}" width="140" height="140" alt="QR Code">`;
+      }
+    }
+
+    if (modal) modal.classList.remove('hidden');
+    if (window.lucide) window.lucide.createIcons();
   }
 
   // --- THEME TOGGLING ---

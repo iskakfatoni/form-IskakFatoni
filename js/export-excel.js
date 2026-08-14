@@ -61,6 +61,8 @@ class ExcelExporter {
             if (locObj && typeof locObj === 'object' && locObj.lat) {
               ans = `${locObj.lat}, ${locObj.lng} (https://www.google.com/maps?q=${locObj.lat},${locObj.lng})`;
             }
+          } else if (q.type === 'signature' && typeof ans === 'string' && ans.startsWith('data:image')) {
+            ans = '[Tanda Tangan Digital Terverifikasi]';
           } else if (Array.isArray(ans)) {
             ans = ans.join(', ');
           } else if (ans === undefined || ans === null) {

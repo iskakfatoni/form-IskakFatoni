@@ -74,6 +74,13 @@ class FormViewer {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
+
+    const btnPrint = document.getElementById('btn-print-receipt');
+    if (btnPrint) {
+      btnPrint.addEventListener('click', () => {
+        this.printSubmissionReceipt();
+      });
+    }
   }
 
   async loadForm(formId) {
@@ -366,6 +373,51 @@ class FormViewer {
           <input type="hidden" name="${qName}" class="input-gps-hidden" value="">
         </div>
       `;
+    } else if (q.type === 'file') {
+      inputHtml = `
+        <div class="live-file-uploader" data-question-id="${q.id}">
+          <div class="file-dropzone-box" id="dropzone-${q.id}">
+            <i data-lucide="camera" class="file-dropzone-icon"></i>
+            <div class="file-dropzone-label">Ambil Foto / Pilih File Berkas</div>
+            <div class="file-dropzone-sub">Format JPG, PNG, WEBP (Otomatis dikompresi)</div>
+            <input type="file" class="input-file-element" accept="image/*" style="display:none;">
+          </div>
+          <div class="file-preview-card hidden" id="file-preview-${q.id}">
+            <div class="file-preview-left">
+              <img src="" alt="Thumbnail File" class="file-thumb-img">
+              <div class="file-meta-info">
+                <span class="file-meta-name">Foto Terlampir</span>
+                <span class="file-meta-size">Tersimpan</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-ghost btn-xs text-danger btn-remove-file" title="Hapus Foto">
+              <i data-lucide="trash-2"></i>
+              <span>Hapus</span>
+            </button>
+          </div>
+          <input type="hidden" name="${qName}" class="input-file-hidden" value="">
+        </div>
+      `;
+    } else if (q.type === 'signature') {
+      inputHtml = `
+        <div class="live-signature-wrap" data-question-id="${q.id}">
+          <div class="signature-pad-box" id="signature-box-${q.id}">
+            <canvas class="signature-canvas" width="480" height="160"></canvas>
+            <div class="signature-placeholder">
+              <i data-lucide="pen-tool"></i>
+              <span>Bubuhkan tanda tangan di sini...</span>
+            </div>
+          </div>
+          <div class="signature-actions-row">
+            <span class="signature-status-tag">Gunakan jari di layar sentuh HP atau mouse</span>
+            <button type="button" class="btn btn-ghost btn-xs btn-clear-signature" title="Hapus dan ulangi tanda tangan">
+              <i data-lucide="rotate-ccw"></i>
+              <span>Hapus / Ulangi Tanda Tangan</span>
+            </button>
+          </div>
+          <input type="hidden" name="${qName}" class="input-signature-hidden" value="">
+        </div>
+      `;
     } else if (q.type === 'time') {
       inputHtml = `
         <input type="time" class="live-input-text" name="${qName}">
@@ -398,6 +450,146 @@ class FormViewer {
       </div>
       <div class="error-msg">Pertanyaan ini wajib diisi.</div>
     `;
+
+    // File / Photo Upload Handler
+    if (q.type === 'file') {
+      const dropzone = card.querySelector('.file-dropzone-box');
+      const fileInput = card.querySelector('.input-file-element');
+      const previewCard = card.querySelector('.file-preview-card');
+      const thumbImg = card.querySelector('.file-thumb-img');
+      const metaSize = card.querySelector('.file-meta-size');
+      const btnRemove = card.querySelector('.btn-remove-file');
+      const hiddenInput = card.querySelector('.input-file-hidden');
+
+      if (dropzone && fileInput) {
+        dropzone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', async (e) => {
+          if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            if (window.app && typeof window.app.showToast === 'function') {
+              window.app.showToast('Mengompresi & mengunggah foto...', 'info');
+            }
+            try {
+              const formId = this.currentForm ? this.currentForm.id : 'form_upload';
+              const result = await window.imageUploader.processAndUpload(file, {
+                formId,
+                context: 'submission',
+                maxWidth: 1200,
+                quality: 0.85
+              });
+              this.answers[q.id] = result.url;
+              hiddenInput.value = result.url;
+              thumbImg.src = result.url;
+              metaSize.textContent = `${(result.size / 1024).toFixed(0)} KB (Tersimpan)`;
+              previewCard.classList.remove('hidden');
+              dropzone.classList.add('hidden');
+              card.classList.remove('has-error');
+              if (window.app && typeof window.app.showToast === 'function') {
+                window.app.showToast('Foto berhasil dilampirkan!', 'success');
+              }
+              if (window.lucide) window.lucide.createIcons();
+            } catch (uploadErr) {
+              console.error(uploadErr);
+              if (window.app && typeof window.app.showToast === 'function') {
+                window.app.showToast('Gagal memproses foto: ' + uploadErr.message, 'error');
+              }
+            }
+          }
+        });
+      }
+
+      if (btnRemove) {
+        btnRemove.addEventListener('click', () => {
+          delete this.answers[q.id];
+          hiddenInput.value = '';
+          if (fileInput) fileInput.value = '';
+          thumbImg.src = '';
+          previewCard.classList.add('hidden');
+          dropzone.classList.remove('hidden');
+        });
+      }
+    }
+
+    // Digital Signature Canvas Handler
+    if (q.type === 'signature') {
+      const canvas = card.querySelector('.signature-canvas');
+      const placeholder = card.querySelector('.signature-placeholder');
+      const btnClear = card.querySelector('.btn-clear-signature');
+      const hiddenInput = card.querySelector('.input-signature-hidden');
+
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let hasDrawn = false;
+
+        // Set high-DPI scaling
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = (rect.width || 480) * dpr;
+        canvas.height = (rect.height || 160) * dpr;
+        ctx.scale(dpr, dpr);
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        const getPos = (e) => {
+          const bcr = canvas.getBoundingClientRect();
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          return {
+            x: clientX - bcr.left,
+            y: clientY - bcr.top
+          };
+        };
+
+        const startDraw = (e) => {
+          isDrawing = true;
+          hasDrawn = true;
+          if (placeholder) placeholder.style.display = 'none';
+          card.classList.remove('has-error');
+          const p = getPos(e);
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          if (e.cancelable && e.type.startsWith('touch')) e.preventDefault();
+        };
+
+        const draw = (e) => {
+          if (!isDrawing) return;
+          const p = getPos(e);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+          if (e.cancelable && e.type.startsWith('touch')) e.preventDefault();
+        };
+
+        const endDraw = () => {
+          if (isDrawing && hasDrawn) {
+            isDrawing = false;
+            const sigData = canvas.toDataURL('image/png');
+            this.answers[q.id] = sigData;
+            hiddenInput.value = sigData;
+          }
+        };
+
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', draw);
+        window.addEventListener('mouseup', endDraw);
+
+        canvas.addEventListener('touchstart', startDraw, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', endDraw);
+
+        if (btnClear) {
+          btnClear.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hasDrawn = false;
+            delete this.answers[q.id];
+            hiddenInput.value = '';
+            if (placeholder) placeholder.style.display = 'flex';
+          });
+        }
+      }
+    }
 
     // Location / GPS Capture Handler
     if (q.type === 'location') {
@@ -560,6 +752,31 @@ class FormViewer {
           if (btnDetect) btnDetect.classList.add('hidden');
           if (window.lucide) window.lucide.createIcons();
         }
+      } else if (q.type === 'file') {
+        const previewCard = qCard.querySelector('.file-preview-card');
+        const dropzone = qCard.querySelector('.file-dropzone-box');
+        const thumbImg = qCard.querySelector('.file-thumb-img');
+        const hiddenInput = qCard.querySelector('.input-file-hidden');
+        if (savedVal && typeof savedVal === 'string') {
+          if (thumbImg) thumbImg.src = savedVal;
+          if (hiddenInput) hiddenInput.value = savedVal;
+          if (previewCard) previewCard.classList.remove('hidden');
+          if (dropzone) dropzone.classList.add('hidden');
+        }
+      } else if (q.type === 'signature') {
+        const canvas = qCard.querySelector('.signature-canvas');
+        const placeholder = qCard.querySelector('.signature-placeholder');
+        const hiddenInput = qCard.querySelector('.input-signature-hidden');
+        if (savedVal && typeof savedVal === 'string' && canvas) {
+          const img = new Image();
+          img.onload = () => {
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          };
+          img.src = savedVal;
+          if (placeholder) placeholder.style.display = 'none';
+          if (hiddenInput) hiddenInput.value = savedVal;
+        }
       } else if (q.type === 'choice') {
         const radio = qCard.querySelector(`input[name="${qName}"][value="${CSS.escape(savedVal)}"]`);
         if (radio) radio.checked = true;
@@ -625,7 +842,7 @@ class FormViewer {
         const checkedList = qCard.querySelectorAll(`input[name="${qName}"]:checked`);
         val = Array.from(checkedList).map(el => el.value);
         if (val.length === 0) val = [];
-      } else if (q.type === 'location' || q.type === 'rating') {
+      } else if (q.type === 'location' || q.type === 'rating' || q.type === 'file' || q.type === 'signature') {
         val = this.answers[q.id] || null;
       } else {
         const input = qCard.querySelector(`[name="${qName}"]`);
@@ -639,7 +856,7 @@ class FormViewer {
           isEmpty = true;
         } else if (q.type === 'checkbox' && (!val || val.length === 0)) {
           isEmpty = true;
-        } else if (q.type === 'rating' && !val) {
+        } else if ((q.type === 'file' || q.type === 'signature' || q.type === 'rating') && !val) {
           isEmpty = true;
         } else if (!val || val === '') {
           isEmpty = true;
@@ -745,6 +962,148 @@ class FormViewer {
     this.currentStep = 0;
     this.renderCurrentStep();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  printSubmissionReceipt() {
+    if (!this.currentForm) return;
+
+    const receiptNo = 'REG-' + Date.now().toString().slice(-6);
+    const today = new Date().toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const questions = this.currentForm.questions || [];
+
+    let rowsHtml = '';
+    let photoHtml = '';
+    let signatureHtml = '';
+    let gpsHtml = '';
+
+    questions.forEach(q => {
+      const val = this.answers[q.id];
+      if (val === undefined || val === null || val === '') return;
+
+      if (q.type === 'file' && typeof val === 'string') {
+        photoHtml += `
+          <div style="margin-top: 10px; text-align: center;">
+            <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px;">${this.escapeHtml(q.title)}</div>
+            <img src="${this.escapeHtml(val)}" style="width: 120px; height: 150px; object-fit: cover; border: 1px solid #cbd5e1; border-radius: 4px;">
+          </div>
+        `;
+      } else if (q.type === 'signature' && typeof val === 'string') {
+        signatureHtml = `
+          <div style="text-align: center; width: 200px;">
+            <div style="font-size: 12px; margin-bottom: 4px; color: #475569;">Tanda Tangan Pengisi:</div>
+            <img src="${this.escapeHtml(val)}" style="max-width: 180px; max-height: 70px; border-bottom: 1px solid #0f172a;">
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">( ${this.answers._respondent_email || 'Wali Siswa / Responden'} )</div>
+          </div>
+        `;
+      } else if (q.type === 'location' && typeof val === 'object' && val.lat) {
+        gpsHtml = `
+          <tr>
+            <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 600; width: 35%; background: #f8fafc;">${this.escapeHtml(q.title)}</td>
+            <td style="padding: 8px 12px; border: 1px solid #e2e8f0;">
+              <div><strong>Koordinat GPS:</strong> ${val.lat.toFixed(6)}, ${val.lng.toFixed(6)}</div>
+              <div style="font-size: 12px; color: #10b981;">Akurasi Satelit: ± ${Math.round(val.accuracy || 0)} meter</div>
+              <div style="font-size: 11px; color: #3b82f6; margin-top: 2px;">Tautan Peta: https://www.google.com/maps?q=${val.lat},${val.lng}</div>
+            </td>
+          </tr>
+        `;
+      } else {
+        let display = '';
+        if (Array.isArray(val)) {
+          display = val.join(', ');
+        } else {
+          display = String(val);
+        }
+        rowsHtml += `
+          <tr>
+            <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 600; width: 35%; background: #f8fafc;">${this.escapeHtml(q.title)}</td>
+            <td style="padding: 8px 12px; border: 1px solid #e2e8f0;">${this.escapeHtml(display)}</td>
+          </tr>
+        `;
+      }
+    });
+
+    const receiptHtml = `
+      <!DOCTYPE html>
+      <html lang="id">
+      <head>
+        <meta charset="UTF-8">
+        <title>Bukti Pengisian - ${this.escapeHtml(this.currentForm.title)}</title>
+        <style>
+          @page { size: A4 portrait; margin: 15mm; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; margin: 0; padding: 10px; font-size: 13px; }
+          .receipt-box { border: 2px solid #0f172a; padding: 20px; border-radius: 8px; max-width: 800px; margin: auto; }
+          .header-table { width: 100%; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px; }
+          .title-area { text-align: center; }
+          .title-area h2 { margin: 0 0 4px 0; font-size: 18px; text-transform: uppercase; }
+          .title-area p { margin: 0; font-size: 12px; color: #475569; }
+          .meta-bar { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 14px; background: #f1f5f9; padding: 8px 12px; border-radius: 4px; }
+          table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12.5px; }
+          .footer-section { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 24px; padding-top: 12px; }
+          .stamp-box { border: 1px dashed #94a3b8; padding: 8px 16px; font-size: 11px; color: #64748b; border-radius: 4px; }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-box">
+          <div class="header-table">
+            <div class="title-area">
+              <h2>${this.escapeHtml(this.currentForm.title || 'LEMBAR BUKTI PENGISIAN BIODATA')}</h2>
+              <p>Sistem Formulir Online & Perekaman Data Resmi • FormCraft</p>
+            </div>
+          </div>
+
+          <div class="meta-bar">
+            <div><strong>No. Registrasi:</strong> ${receiptNo}</div>
+            <div><strong>Waktu Pengisian:</strong> ${today}</div>
+            <div><strong>Status:</strong> <span style="color: #059669; font-weight: bold;">TERVERIFIKASI SISTEM</span></div>
+          </div>
+
+          <div style="display: flex; gap: 20px; align-items: flex-start;">
+            <div style="flex: 1;">
+              <table class="data-table">
+                <tbody>
+                  ${rowsHtml}
+                  ${gpsHtml}
+                </tbody>
+              </table>
+            </div>
+            ${photoHtml ? `<div style="width: 130px; flex-shrink: 0;">${photoHtml}</div>` : ''}
+          </div>
+
+          <div class="footer-section">
+            <div class="stamp-box">
+              <strong>Tanda Bukti Sah Elektronik</strong><br>
+              Dokumen ini dicetak otomatis dan diakui secara sah oleh pihak sekolah/penyelenggara.
+            </div>
+            ${signatureHtml}
+          </div>
+        </div>
+        <script>
+          window.onload = () => {
+            setTimeout(() => {
+              window.print();
+            }, 300);
+          };
+        <\/script>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.open();
+      printWindow.document.write(receiptHtml);
+      printWindow.document.close();
+    } else {
+      alert('Mohon izinkan popup browser untuk membuka lembar cetak bukti pengisian.');
+    }
   }
 
   escapeHtml(str) {

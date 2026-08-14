@@ -220,6 +220,20 @@ class ResponsesDashboard {
             } else {
               displayVal = this.escapeHtml(String(ans));
             }
+          } else if (q.type === 'file') {
+            displayVal = `
+              <a href="${this.escapeHtml(String(ans))}" target="_blank" class="btn btn-ghost btn-xs" style="color: var(--primary); text-decoration: underline;" title="Buka / Unduh Foto">
+                <i data-lucide="image" style="width:13px; height:13px;"></i>
+                <span>Lihat Foto</span>
+              </a>
+            `;
+          } else if (q.type === 'signature') {
+            displayVal = `
+              <a href="${this.escapeHtml(String(ans))}" target="_blank" class="btn btn-ghost btn-xs" style="color: var(--primary); text-decoration: underline;" title="Lihat Gambar Tanda Tangan">
+                <i data-lucide="pen-tool" style="width:13px; height:13px;"></i>
+                <span>Lihat TTD</span>
+              </a>
+            `;
           } else if (q.type === 'rating') {
             displayVal = `⭐ ${ans} / 5`;
           } else {
