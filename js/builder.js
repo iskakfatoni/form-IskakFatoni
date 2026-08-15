@@ -421,8 +421,9 @@ class FormBuilder {
     if (this.submitMsgInput) this.submitMsgInput.value = this.currentForm.submitMessage || 'Terima kasih! Tanggapan Anda telah berhasil direkam.';
     if (this.collectEmailCheck) this.collectEmailCheck.checked = this.currentForm.collectEmail === true;
     if (this.allowMultipleCheck) this.allowMultipleCheck.checked = this.currentForm.allowMultiple !== false;
-    if (this.isActiveCheck) this.isActiveCheck.checked = this.currentForm.isActive !== false;
-    if (this.gdriveScriptUrlInput) this.gdriveScriptUrlInput.value = this.currentForm.gdriveScriptUrl || '';
+    if (this.gdriveScriptUrlInput) {
+      this.gdriveScriptUrlInput.value = this.currentForm.gdriveScriptUrl || (window.gdriveUploader ? window.gdriveUploader.defaultGlobalScriptUrl : '');
+    }
     if (this.gdriveFolderIdInput) this.gdriveFolderIdInput.value = this.currentForm.gdriveFolderId || '';
 
     // Update active color swatch

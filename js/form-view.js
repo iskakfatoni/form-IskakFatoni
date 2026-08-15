@@ -1177,6 +1177,7 @@ class FormViewer {
                 scriptUrl: this.currentForm.gdriveScriptUrl || '',
                 folderId: this.currentForm.gdriveFolderId || '',
                 formId: this.currentForm.id,
+                formTitle: this.currentForm.title || 'Formulir Respon',
                 questionTitle: qObj ? qObj.title : 'File'
               });
               this.answers[qId] = {

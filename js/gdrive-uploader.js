@@ -6,30 +6,44 @@
 
 class GoogleDriveUploader {
   constructor() {
+    // Default Global Web App URL for all forms in the application
+    this.defaultGlobalScriptUrl = 'https://script.google.com/macros/s/AKfycbyXoRdg_Sgqhy9AZi2XbrF_uT_dP3xsJZk7Dylu3F9CKJ3Co-WSls86gOhxoCg3P_hT/exec';
+
     this.defaultScriptTemplate = `// =========================================================================
 // GOOGLE APPS SCRIPT WEBHOOK UNTUK FORM::IskakFatoni
-// Simpan berkas dari form langsung ke folder Google Drive Anda
+// Simpan berkas dari form otomatis ke Folder Google Drive sesuai Nama Form
 // =========================================================================
 
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
-    var folderId = data.folderId;
-    var folder;
+    var parentFolder;
     
-    // Pilih folder tujuan (atau root Google Drive jika kosong)
-    if (folderId && folderId.trim() !== '') {
-      folder = DriveApp.getFolderById(folderId.trim());
+    // 1. Dapatkan folder induk (atau root Google Drive jika kosong)
+    if (data.folderId && data.folderId.trim() !== '') {
+      parentFolder = DriveApp.getFolderById(data.folderId.trim());
     } else {
-      folder = DriveApp.getRootFolder();
+      parentFolder = DriveApp.getRootFolder();
     }
     
-    // Decode base64 dan buat file
+    // 2. Buat atau cari Sub-Folder otomatis sesuai Judul/Nama Formulir
+    var folder = parentFolder;
+    var formTitle = data.formTitle || data.formId || 'Formulir Respon';
+    var safeFolderName = formTitle.replace(/[\\\\/:*?"<>|]/g, '_').trim();
+    
+    var subFolders = parentFolder.getFoldersByName(safeFolderName);
+    if (subFolders.hasNext()) {
+      folder = subFolders.next();
+    } else {
+      folder = parentFolder.createFolder(safeFolderName);
+    }
+    
+    // 3. Decode base64 dan simpan file ke dalam folder formulir tersebut
     var decoded = Utilities.base64Decode(data.base64Data);
     var blob = Utilities.newBlob(decoded, data.mimeType || 'application/octet-stream', data.fileName);
     var file = folder.createFile(blob);
     
-    // Beri izin publik hanya untuk membaca file ini (agar bisa dibuka admin/responden)
+    // 4. Atur izin agar file dapat dilihat admin / responden
     try {
       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     } catch(errShare) {
@@ -43,7 +57,8 @@ function doPost(e) {
       status: 'success',
       fileId: file.getId(),
       fileName: file.getName(),
-      fileSize: file.getSize(),
+      folderName: folder.getName(),
+      folderId: folder.getId(),
       url: viewUrl,
       downloadUrl: downloadUrl,
       mimeType: file.getMimeType()
@@ -60,7 +75,7 @@ function doPost(e) {
 function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify({
     status: 'online',
-    service: 'FORM::IskakFatoni Google Drive Webhook Endpoint'
+    service: 'FORM::IskakFatoni Google Drive Webhook Endpoint (Auto Folder Per Form)'
   })).setMimeType(ContentService.MimeType.JSON);
 }
 `;
@@ -101,7 +116,7 @@ function doGet(e) {
   async uploadToGoogleDrive(file, options = {}) {
     if (!file) throw new Error('Berkas tidak ditemukan');
 
-    let scriptUrl = (options.scriptUrl || '').trim();
+    let scriptUrl = (options.scriptUrl || '').trim() || this.defaultGlobalScriptUrl;
     if (scriptUrl && !scriptUrl.startsWith('http')) {
       // Auto-convert raw Deployment ID to full Apps Script Web App URL
       scriptUrl = `https://script.google.com/macros/s/${scriptUrl}/exec`;
@@ -119,6 +134,8 @@ function doGet(e) {
           base64Data: base64Data,
           folderId: folderId,
           formId: options.formId || '',
+          formTitle: options.formTitle || 'Formulir Respon',
+          questionTitle: options.questionTitle || '',
           uploadedAt: new Date().toISOString()
         };
 
