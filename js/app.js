@@ -70,13 +70,7 @@ class App {
   }
 
   createStudentBioTemplate() {
-    this.showSection('view-builder');
-    const navBuilder = document.getElementById('nav-builder');
-    if (navBuilder) navBuilder.classList.add('active');
-    window.location.hash = '#/builder';
-    if (this.builder) {
-      this.builder.loadStudentBioTemplate();
-    }
+    window.location.hash = '#/builder/template-biodata';
   }
 
   // --- SPA HASH ROUTING ---
@@ -116,7 +110,13 @@ class App {
       document.body.classList.remove('responder-mode');
       this.showSection('view-builder');
       if (navBuilder) navBuilder.classList.add('active');
-      if (this.builder) this.builder.loadForm(param);
+      if (this.builder) {
+        if (param === 'template-biodata') {
+          this.builder.loadStudentBioTemplate();
+        } else {
+          this.builder.loadForm(param);
+        }
+      }
     } else if (route === 'view' || route === 'form') {
       // HIDE main dashboard navbar so responder is 100% focused on the form
       if (mainNav) mainNav.style.display = 'none';

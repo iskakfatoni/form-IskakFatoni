@@ -272,6 +272,165 @@ class FormStorage {
   // Initial template/seed form for fresh user experience
   ensureSeedData() {
     const existing = this.getLocalForms();
+    const existingResponses = this.getLocalResponses();
+
+    const sampleBioForm = {
+      id: 'sample_biodata_siswa',
+      ownerUid: 'sample_seed',
+      title: 'Formulir Biodata & Titik Lokasi Rumah Siswa',
+      description: 'Mohon lengkapi biodata siswa berikut dengan benar. Pastikan fitur GPS / Lokasi di HP Anda sudah aktif saat menekan tombol ambil titik lokasi rumah.',
+      themeColor: '#06b6d4',
+      bannerUrl: '',
+      submitMessage: 'Terima kasih! Biodata dan titik lokasi rumah siswa telah berhasil direkam.',
+      collectEmail: false,
+      allowMultiple: false,
+      isActive: true,
+      responseCount: 2,
+      lastResponseAt: new Date(Date.now() - 7200000).toISOString(),
+      createdAt: new Date(Date.now() - 172800000).toISOString(),
+      updatedAt: new Date(Date.now() - 7200000).toISOString(),
+      sections: [
+        {
+          id: 'sec_bio_1',
+          title: 'Bagian 1: Data Pokok Siswa',
+          description: 'Isikan identitas lengkap peserta didik sesuai dokumen resmi (Akta / KK).'
+        },
+        {
+          id: 'sec_bio_2',
+          title: 'Bagian 2: Alamat & Perekaman Titik Rumah (GPS)',
+          description: 'Pastikan pengisian dilakukan di rumah atau gunakan GPS akurat dari HP Anda.'
+        }
+      ],
+      questions: [
+        {
+          id: 'q_bio_nama',
+          sectionId: 'sec_bio_1',
+          type: 'text',
+          title: 'Nama Lengkap Siswa',
+          required: true
+        },
+        {
+          id: 'q_bio_nisn',
+          sectionId: 'sec_bio_1',
+          type: 'number',
+          title: 'Nomor Induk Siswa Nasional (NISN)',
+          required: true
+        },
+        {
+          id: 'q_bio_jk',
+          sectionId: 'sec_bio_1',
+          type: 'choice',
+          title: 'Jenis Kelamin',
+          required: true,
+          options: ['Laki-laki', 'Perempuan']
+        },
+        {
+          id: 'q_bio_ttl',
+          sectionId: 'sec_bio_1',
+          type: 'text',
+          title: 'Tempat, Tanggal Lahir (Contoh: Surabaya, 12 Mei 2010)',
+          required: true
+        },
+        {
+          id: 'q_bio_foto',
+          sectionId: 'sec_bio_1',
+          type: 'file',
+          title: 'Pas Foto Diri Siswa (3x4 / Foto Resmi)',
+          required: true
+        },
+        {
+          id: 'q_bio_ortu',
+          sectionId: 'sec_bio_1',
+          type: 'text',
+          title: 'Nama Orang Tua / Wali',
+          required: true
+        },
+        {
+          id: 'q_bio_wa',
+          sectionId: 'sec_bio_1',
+          type: 'text',
+          title: 'Nomor WhatsApp / HP Orang Tua (Aktif)',
+          required: true
+        },
+        {
+          id: 'q_bio_alamat',
+          sectionId: 'sec_bio_2',
+          type: 'paragraph',
+          title: 'Alamat Lengkap Rumah (Jalan, RT/RW, Dusun/Desa, Kelurahan, Kecamatan, Kab/Kota)',
+          required: true
+        },
+        {
+          id: 'q_bio_gps',
+          sectionId: 'sec_bio_2',
+          type: 'location',
+          title: 'Titik Lokasi GPS Rumah Siswa (Klik Ambil Titik Lokasi)',
+          required: true
+        },
+        {
+          id: 'q_bio_foto_rumah',
+          sectionId: 'sec_bio_2',
+          type: 'file',
+          title: 'Foto Tampak Depan Rumah Siswa',
+          required: false
+        },
+        {
+          id: 'q_bio_patokan',
+          sectionId: 'sec_bio_2',
+          type: 'paragraph',
+          title: 'Patokan / Petunjuk Arah Menuju Rumah (Contoh: Sebelah barat Masjid, pagar hijau)',
+          required: false
+        },
+        {
+          id: 'q_bio_ttd',
+          sectionId: 'sec_bio_2',
+          type: 'signature',
+          title: 'Tanda Tangan Digital Orang Tua / Wali Siswa',
+          required: true
+        }
+      ]
+    };
+
+    const sampleBioResponses = [
+      {
+        id: 'resp_bio_1',
+        formId: 'sample_biodata_siswa',
+        submittedAt: new Date(Date.now() - 86400000).toISOString(),
+        answers: {
+          'q_bio_nama': 'Muhammad Rizky Pratama',
+          'q_bio_nisn': '0089472615',
+          'q_bio_jk': 'Laki-laki',
+          'q_bio_ttl': 'Surabaya, 14 Februari 2010',
+          'q_bio_foto': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=80',
+          'q_bio_ortu': 'Bambang Supriyanto',
+          'q_bio_wa': '081234567890',
+          'q_bio_alamat': 'Jl. Mawar No. 18 RT 03/RW 04, Kel. Sukolilo, Kec. Sukolilo, Kota Surabaya',
+          'q_bio_gps': { latitude: -7.2891, longitude: 112.7983, accuracy: 8.5 },
+          'q_bio_foto_rumah': 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400&auto=format&fit=crop&q=80',
+          'q_bio_patokan': 'Sebelah timur Masjid Al-Ikhlas, rumah tingkat cat abu-abu.',
+          'q_bio_ttd': 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80"><path d="M20,50 Q60,10 100,50 T180,40" stroke="%233b82f6" stroke-width="3" fill="none"/></svg>'
+        }
+      },
+      {
+        id: 'resp_bio_2',
+        formId: 'sample_biodata_siswa',
+        submittedAt: new Date(Date.now() - 7200000).toISOString(),
+        answers: {
+          'q_bio_nama': 'Annisa Putri Maharani',
+          'q_bio_nisn': '0091827364',
+          'q_bio_jk': 'Perempuan',
+          'q_bio_ttl': 'Sidoarjo, 22 Agustus 2010',
+          'q_bio_foto': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80',
+          'q_bio_ortu': 'Hadi Wijaya',
+          'q_bio_wa': '085712349988',
+          'q_bio_alamat': 'Perum Griya Asri Blok C2 No. 15, Waru, Sidoarjo',
+          'q_bio_gps': { latitude: -7.3562, longitude: 112.7214, accuracy: 6.2 },
+          'q_bio_foto_rumah': 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&auto=format&fit=crop&q=80',
+          'q_bio_patokan': 'Masuk gerbang utama perumahan belok kanan lorong ke-2.',
+          'q_bio_ttd': 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80"><path d="M20,60 Q50,20 120,40 T170,30" stroke="%233b82f6" stroke-width="3" fill="none"/></svg>'
+        }
+      }
+    ];
+
     if (!existing || existing.length === 0) {
       const sampleForm = {
         id: 'sample_customer_feedback',
@@ -362,8 +521,17 @@ class FormStorage {
         }
       ];
 
-      localStorage.setItem(this.LOCAL_FORMS_KEY, JSON.stringify([sampleForm]));
-      localStorage.setItem(this.LOCAL_RESPONSES_KEY, JSON.stringify(sampleResponses));
+      localStorage.setItem(this.LOCAL_FORMS_KEY, JSON.stringify([sampleBioForm, sampleForm]));
+      localStorage.setItem(this.LOCAL_RESPONSES_KEY, JSON.stringify([...sampleBioResponses, ...sampleResponses]));
+    } else {
+      // Check if sample_biodata_siswa already exists, if not prepend it
+      const hasBio = existing.some(f => f.id === 'sample_biodata_siswa');
+      if (!hasBio) {
+        existing.unshift(sampleBioForm);
+        localStorage.setItem(this.LOCAL_FORMS_KEY, JSON.stringify(existing));
+        const updatedResponses = [...(existingResponses || []), ...sampleBioResponses];
+        localStorage.setItem(this.LOCAL_RESPONSES_KEY, JSON.stringify(updatedResponses));
+      }
     }
   }
 }
