@@ -61,6 +61,16 @@ class ExcelExporter {
             if (locObj && typeof locObj === 'object' && locObj.lat) {
               ans = `${locObj.lat}, ${locObj.lng} (https://www.google.com/maps?q=${locObj.lat},${locObj.lng})`;
             }
+          } else if (q.type === 'file_gdrive' || (ans && typeof ans === 'object' && ans.url)) {
+            let fileObj = ans;
+            if (typeof fileObj === 'string' && fileObj.startsWith('{')) {
+              try { fileObj = JSON.parse(fileObj); } catch(e){}
+            }
+            if (typeof fileObj === 'object' && fileObj.url) {
+              ans = `${fileObj.name || 'Berkas'}: ${fileObj.url}`;
+            } else {
+              ans = String(ans);
+            }
           } else if (q.type === 'signature' && typeof ans === 'string' && ans.startsWith('data:image')) {
             ans = '[Tanda Tangan Digital Terverifikasi]';
           } else if (Array.isArray(ans)) {

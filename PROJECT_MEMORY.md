@@ -33,7 +33,8 @@ form-IskakFatoni/
 │   ├── form-view.js             # Form responder engine, multi-section stepper, validation, signature pad, camera/GPS
 │   ├── responses.js             # Response table, analytics summary, detail viewer
 │   ├── export-excel.js          # Export to Excel (.xlsx) via SheetJS & CSV exporter
-│   └── image-uploader.js        # Client-side image auto-compression, aspect-ratio handler, Cloud fallback
+│   ├── image-uploader.js        # Client-side image auto-compression, aspect-ratio handler, Cloud fallback
+│   └── gdrive-uploader.js       # Google Drive upload engine via Apps Script Webhook & fallback
 ├── firestore.rules              # Firestore Security Rules
 ├── firebase.json                # Firebase Hosting / Tools config
 └── .github/workflows/deploy.yml # CI/CD deployment with automated cache-busting timestamp
@@ -54,9 +55,12 @@ form-IskakFatoni/
   - Teks Pendek, Paragraf, Angka.
   - Pilihan Ganda (Radio), Kotak Centang (Checkboxes), Dropdown.
   - Skala Linier (1-5 / 1-10), Rating Bintang (1-5), Tanggal, Waktu.
+  - **Upload Berkas ke Google Drive (`file_gdrive`)**: Responden dapat mengunggah berkas format apa pun (PDF, Word, Excel, ZIP, Media) langsung ke folder Google Drive pemilik formulir tanpa perlu login Google.
   - **Upload Foto & Kamera**: Mendukung pengambilan foto langsung dari kamera HP/laptop atau file explorer.
   - **Tanda Tangan Digital (Signature Pad)**: Kanvas interaktif HTML5 dengan fungsi clear dan simpan resolusi tinggi.
   - **Perekam Lokasi GPS**: Mengambil koordinat Geolocation presisi tinggi dengan tombol preview Google Maps.
+- **Integrasi Google Apps Script Webhook & Panduan 1-Klik**:
+  - Modal panduan setup webhook Google Apps Script dengan tombol 1-klik salin kode skrip dan penguji koneksi webhook.
 - **Conditional Section Branching (Logika Percabangan)**:
   - Opsi dropdown pada setiap opsi pilihan ganda/dropdown untuk menentukan arah navigasi: *Lanjut ke bagian berikutnya*, *Lompat ke Bagian X*, atau *Kirim formulir (Submit)*.
 - **Banner Kustom**: Upload gambar banner kustom dengan kompresi cerdas di sisi klien dan *live preview*.

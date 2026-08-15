@@ -9,11 +9,12 @@
 - **🎨 Modern & Responsive UI**: Antarmuka berbasis *Glassmorphism* dengan tema Gelap (Dark Mode) dan Terang (Light Mode), tipografi modern (*Inter & Outfit*), serta animasi mikro yang halus.
 - **🛠️ Form Builder Dinamis & Canggih**:
   - Tipe pertanyaan lengkap: **Teks Singkat, Paragraf, Pilihan Ganda (Radio), Kotak Centang (Checkboxes), Dropdown, Rating Bintang (1-5), Skala Linier (1-5 / 1-10), Tanggal, Waktu, dan Angka**.
-  - **Kamera & Upload Foto**: Ambil foto langsung dari kamera perangkat atau unggah berkas dengan auto-kompresi gambar.
-  - **Tanda Tangan Digital (Signature Pad)**: Kanvas tanda tangan digital interaktif langsung di peramban.
-  - **Perekam Lokasi GPS**: Mengambil koordinat GPS presisi tinggi dengan tombol pratinjau peta.
-  - **Conditional Section Branching**: Logika lompat ke bagian tertentu atau langsung kirim berdasarkan opsi jawaban responden.
-  - **Custom Banner Header**: Unggah banner kustom dengan kompresi otomatis dan *live preview*.
+  - **📁 Upload Berkas ke Google Drive**: Responden dapat mengunggah file (PDF, Word, Excel, ZIP, Media, Foto) langsung ke folder Google Drive pemilik form via Google Apps Script Webhook tanpa login akun Google.
+  - **📸 Kamera & Upload Foto**: Ambil foto langsung dari kamera perangkat atau unggah berkas dengan auto-kompresi gambar.
+  - **✍️ Tanda Tangan Digital (Signature Pad)**: Kanvas tanda tangan digital interaktif langsung di peramban.
+  - **📍 Perekam Lokasi GPS**: Mengambil koordinat GPS presisi tinggi dengan tombol pratinjau peta.
+  - **🔀 Conditional Section Branching**: Logika lompat ke bagian tertentu atau langsung kirim berdasarkan opsi jawaban responden.
+  - **🖼️ Custom Banner Header**: Unggah banner kustom dengan kompresi otomatis dan *live preview*.
   - Atur pertanyaan wajib (*Required*), duplikasi pertanyaan, pindah posisi (*reorder*), dan hapus.
   - Pengaturan formulir: Batas waktu penutupan (*deadline*), batasan kuota respon, password akses, dan toggle terima respon.
 - **📋 Form Viewer / Responden**:

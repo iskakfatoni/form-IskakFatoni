@@ -266,8 +266,9 @@
               <button class="type-pill" data-type="text"><i data-lucide="type"></i> Teks</button>
               <button class="type-pill" data-type="choice"><i data-lucide="check-circle-2"></i> Pilihan</button>
               <button class="type-pill" data-type="checkbox"><i data-lucide="check-square"></i> Centang</button>
-              <button class="type-pill" data-type="location"><i data-lucide="map-pin"></i> Lokasi GPS</button>
-              <button class="type-pill" data-type="file"><i data-lucide="camera"></i> Upload Foto</button>
+              <button class="type-pill" data-type="file_gdrive" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4);"><i data-lucide="hard-drive"></i> Drive</button>
+              <button class="type-pill" data-type="file"><i data-lucide="camera"></i> Foto</button>
+              <button class="type-pill" data-type="location"><i data-lucide="map-pin"></i> GPS</button>
               <button class="type-pill" data-type="signature"><i data-lucide="pen-tool"></i> Tanda Tangan</button>
               <button class="type-pill" data-type="rating"><i data-lucide="star"></i> Rating</button>
               <button class="type-pill" data-type="date"><i data-lucide="calendar"></i> Tanggal</button>
@@ -366,6 +367,42 @@
                   <span class="custom-box"></span>
                   <span>Formulir aktif menerima respon</span>
                 </label>
+              </div>
+            </div>
+
+            <!-- Google Drive Integration Card -->
+            <div class="settings-card glass-card" style="grid-column: 1 / -1;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                <div>
+                  <h3 style="display: flex; align-items: center; gap: 8px; color: #10b981;">
+                    <i data-lucide="hard-drive"></i> Integrasi Google Drive (Upload Berkas)
+                  </h3>
+                  <p class="settings-subtitle">Simpan semua file (PDF, Word, Excel, ZIP, Foto) yang diunggah responden langsung ke Google Drive Anda.</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-open-gdrive-guide" style="border-color: rgba(16, 185, 129, 0.4);">
+                  <i data-lucide="help-circle"></i>
+                  <span>Panduan Setup Google Drive (1-Klik Copy)</span>
+                </button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div class="setting-item">
+                  <label for="form-gdrive-script-url">Google Apps Script Web App URL</label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="url" id="form-gdrive-script-url" class="input-text" placeholder="https://script.google.com/macros/s/.../exec">
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-test-gdrive-url" title="Uji Sambungan Webhook">
+                      <i data-lucide="activity"></i>
+                      <span>Tes</span>
+                    </button>
+                  </div>
+                  <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 4px;">Dapatkan URL ini dengan Deploy Apps Script sebagai Web App (Akses: Siapa Saja).</span>
+                </div>
+
+                <div class="setting-item">
+                  <label for="form-gdrive-folder-id">ID Folder Google Drive (Opsional)</label>
+                  <input type="text" id="form-gdrive-folder-id" class="input-text" placeholder="Contoh: 1a2B3c4D5e6F7g8H9i0J...">
+                  <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 4px;">Biarkan kosong untuk menyimpan langsung di root Google Drive Anda.</span>
+                </div>
               </div>
             </div>
           </div>
@@ -605,18 +642,97 @@
     </div>
   </div>
 
+  <!-- GOOGLE DRIVE SETUP GUIDE MODAL -->
+  <div id="modal-gdrive-guide" class="modal-overlay hidden">
+    <div class="modal-card glass-card" style="max-width: 680px; width: 92%;">
+      <div class="modal-header">
+        <div class="modal-title" style="color: #10b981;">
+          <i data-lucide="hard-drive"></i>
+          <h3>Panduan Integrasi Google Drive (3 Langkah Mudah)</h3>
+        </div>
+        <button class="btn-close-modal" id="btn-close-gdrive-guide">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
+        <p class="modal-desc" style="margin-bottom: 16px;">
+          Ikuti panduan berikut untuk membuat webhook Google Apps Script gratis agar setiap responden dapat mengunggah file (PDF, Word, Excel, Foto) langsung ke folder Google Drive Anda tanpa perlu login akun Google:
+        </p>
+
+        <!-- Step 1 -->
+        <div class="gdrive-guide-step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4>Buka Google Apps Script</h4>
+            <p>Kunjungi <a href="https://script.google.com" target="_blank" style="color: var(--primary); text-decoration: underline; font-weight: 600;">script.google.com</a> di browser Anda, lalu klik tombol <strong>"New Project" (+ Proyek Baru)</strong>.</p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="gdrive-guide-step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h4>Tempelkan Kode Skrip Webhook</h4>
+              <button type="button" class="btn btn-primary btn-xs" id="btn-copy-gdrive-script">
+                <i data-lucide="copy"></i>
+                <span id="txt-copy-gdrive-script">Salin Kode Skrip</span>
+              </button>
+            </div>
+            <p>Hapus seluruh kode bawaan di editor Apps Script (<code>Code.gs</code>), lalu tempelkan kode di bawah ini:</p>
+            <div class="code-block-wrap">
+              <pre><code id="gdrive-script-code-display">// Memuat kode webhook...</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="gdrive-guide-step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4>Deploy sebagai Web App</h4>
+            <ul style="margin: 6px 0 10px 20px; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+              <li>Klik tombol biru <strong>"Deploy"</strong> di pojok kanan atas > Pilih <strong>"New deployment"</strong>.</li>
+              <li>Pilih tipe: <strong>"Web App"</strong> (ikon gear).</li>
+              <li>Isi Description: <code>FORM Upload Webhook</code>.</li>
+              <li><strong>Execute as:</strong> Pilih <em>"Me" (Akun Google Anda)</em>.</li>
+              <li><strong>Who has access:</strong> Wajib pilih <strong><em>"Anyone" (Siapa saja)</em></strong> agar responden bisa upload.</li>
+              <li>Klik <strong>Deploy</strong> > Berikan izin (Authorize access).</li>
+              <li><strong>Salin "Web App URL"</strong> yang berakhiran <code>/exec</code> lalu tempelkan di kolom input Google Drive di FORM::IskakFatoni.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Folder ID Note -->
+        <div class="gdrive-guide-alert glass" style="padding: 12px 16px; border-radius: var(--radius-sm); border-left: 4px solid #10b981; margin-top: 14px; font-size: 0.85rem;">
+          <strong>💡 Cara Mendapatkan ID Folder Google Drive (Opsional):</strong><br>
+          Buka folder di <a href="https://drive.google.com" target="_blank" style="color: var(--primary);">drive.google.com</a>, perhatikan URL di browser Anda:<br>
+          <code>https://drive.google.com/drive/folders/<strong>1a2B3c4D5e6F7g8H9i0J</strong></code><br>
+          Teks tebal di atas adalah ID Foldernya.
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 14px 20px; display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color);">
+        <button type="button" class="btn btn-primary" id="btn-done-gdrive-guide">
+          <i data-lucide="check"></i>
+          <span>Saya Mengerti & Selesai</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application Logic Modules -->
-  <script src="js/firebase-config.js?v=1.0.2"></script>
-  <script src="js/storage.js?v=1.0.2"></script>
-  <script src="js/auth.js?v=1.0.2"></script>
-  <script src="js/image-uploader.js?v=1.0.2"></script>
-  <script src="js/export-excel.js?v=1.0.2"></script>
-  <script src="js/builder.js?v=1.0.2"></script>
-  <script src="js/form-view.js?v=1.0.2"></script>
-  <script src="js/responses.js?v=1.0.2"></script>
-  <script src="js/app.js?v=1.0.2"></script>
+  <script src="js/firebase-config.js?v=1.0.3"></script>
+  <script src="js/storage.js?v=1.0.3"></script>
+  <script src="js/auth.js?v=1.0.3"></script>
+  <script src="js/image-uploader.js?v=1.0.3"></script>
+  <script src="js/gdrive-uploader.js?v=1.0.3"></script>
+  <script src="js/export-excel.js?v=1.0.3"></script>
+  <script src="js/builder.js?v=1.0.3"></script>
+  <script src="js/form-view.js?v=1.0.3"></script>
+  <script src="js/responses.js?v=1.0.3"></script>
+  <script src="js/app.js?v=1.0.3"></script>
 </body>
 </html>

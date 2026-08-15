@@ -31,6 +31,16 @@ class FormBuilder {
     this.allowMultipleCheck = document.getElementById('form-allow-multiple');
     this.isActiveCheck = document.getElementById('form-is-active');
 
+    // Google Drive Integration fields in Settings
+    this.gdriveScriptUrlInput = document.getElementById('form-gdrive-script-url');
+    this.gdriveFolderIdInput = document.getElementById('form-gdrive-folder-id');
+    this.btnOpenGdriveGuide = document.getElementById('btn-open-gdrive-guide');
+    this.modalGdriveGuide = document.getElementById('modal-gdrive-guide');
+    this.btnCloseGdriveGuide = document.getElementById('btn-close-gdrive-guide');
+    this.btnDoneGdriveGuide = document.getElementById('btn-done-gdrive-guide');
+    this.btnCopyGdriveScript = document.getElementById('btn-copy-gdrive-script');
+    this.btnTestGdriveUrl = document.getElementById('btn-test-gdrive-url');
+
     // Banner elements in Settings panel
     this.bannerDropzone = document.getElementById('banner-dropzone');
     this.bannerPreviewBox = document.getElementById('banner-preview-box');
@@ -209,6 +219,86 @@ class FormBuilder {
         this.switchTab('settings');
       });
     }
+
+    // Google Drive Guide Modal Events
+    if (this.btnOpenGdriveGuide && this.modalGdriveGuide) {
+      this.btnOpenGdriveGuide.addEventListener('click', () => {
+        const codeDisplay = document.getElementById('gdrive-script-code-display');
+        if (codeDisplay && window.gdriveUploader) {
+          codeDisplay.textContent = window.gdriveUploader.getScriptTemplate();
+        }
+        this.modalGdriveGuide.classList.remove('hidden');
+      });
+    }
+
+    if (this.btnCloseGdriveGuide && this.modalGdriveGuide) {
+      this.btnCloseGdriveGuide.addEventListener('click', () => {
+        this.modalGdriveGuide.classList.add('hidden');
+      });
+    }
+
+    if (this.btnDoneGdriveGuide && this.modalGdriveGuide) {
+      this.btnDoneGdriveGuide.addEventListener('click', () => {
+        this.modalGdriveGuide.classList.add('hidden');
+      });
+    }
+
+    if (this.btnCopyGdriveScript) {
+      this.btnCopyGdriveScript.addEventListener('click', () => {
+        if (window.gdriveUploader) {
+          const scriptText = window.gdriveUploader.getScriptTemplate();
+          navigator.clipboard.writeText(scriptText).then(() => {
+            const txt = document.getElementById('txt-copy-gdrive-script');
+            if (txt) txt.textContent = 'Tersalin!';
+            if (window.app && typeof window.app.showToast === 'function') {
+              window.app.showToast('Kode Google Apps Script berhasil disalin ke clipboard!', 'success');
+            }
+            setTimeout(() => {
+              if (txt) txt.textContent = 'Salin Kode Skrip';
+            }, 2500);
+          }).catch(err => {
+            console.error('Clipboard copy error:', err);
+          });
+        }
+      });
+    }
+
+    // Test Google Drive Webhook URL Button
+    if (this.btnTestGdriveUrl && this.gdriveScriptUrlInput) {
+      this.btnTestGdriveUrl.addEventListener('click', async () => {
+        const url = this.gdriveScriptUrlInput.value.trim();
+        if (!url) {
+          if (window.app && typeof window.app.showToast === 'function') {
+            window.app.showToast('Harap masukkan URL Google Apps Script Web App terlebih dahulu', 'error');
+          }
+          return;
+        }
+
+        if (!url.startsWith('https://script.google.com/macros/s/')) {
+          if (window.app && typeof window.app.showToast === 'function') {
+            window.app.showToast('Format URL tidak valid! Harus berawalan https://script.google.com/macros/s/.../exec', 'error');
+          }
+          return;
+        }
+
+        if (window.app && typeof window.app.showToast === 'function') {
+          window.app.showToast('Menguji sambungan webhook Google Drive...', 'info');
+        }
+
+        try {
+          // Send test GET ping
+          const res = await fetch(url, { method: 'GET', mode: 'no-cors' });
+          if (window.app && typeof window.app.showToast === 'function') {
+            window.app.showToast('Sambungan Google Drive Webhook berhasil terhubung!', 'success');
+          }
+        } catch (err) {
+          console.error('Test GDrive error:', err);
+          if (window.app && typeof window.app.showToast === 'function') {
+            window.app.showToast('Webhook terdaftar. Pastikan izin Web App diatur ke "Anyone" (Siapa saja).', 'info');
+          }
+        }
+      });
+    }
   }
 
   switchTab(tab) {
@@ -319,6 +409,8 @@ class FormBuilder {
     if (this.collectEmailCheck) this.collectEmailCheck.checked = this.currentForm.collectEmail === true;
     if (this.allowMultipleCheck) this.allowMultipleCheck.checked = this.currentForm.allowMultiple !== false;
     if (this.isActiveCheck) this.isActiveCheck.checked = this.currentForm.isActive !== false;
+    if (this.gdriveScriptUrlInput) this.gdriveScriptUrlInput.value = this.currentForm.gdriveScriptUrl || '';
+    if (this.gdriveFolderIdInput) this.gdriveFolderIdInput.value = this.currentForm.gdriveFolderId || '';
 
     // Update active color swatch
     if (this.themeColorSwatches) {
@@ -649,6 +741,49 @@ class FormBuilder {
           </div>
         </div>
       `;
+    } else if (q.type === 'file_gdrive') {
+      const allowed = q.allowedTypes || 'all';
+      const maxSize = q.maxSizeMB || 20;
+      optionsHtml = `
+        <div class="gdrive-preview-box">
+          <div class="gdrive-box-header">
+            <div class="gdrive-box-title">
+              <i data-lucide="hard-drive" style="color: #10b981;"></i>
+              <strong>Upload Berkas ke Google Drive</strong>
+            </div>
+            <button type="button" class="btn btn-ghost btn-xs btn-card-gdrive-guide" style="color: #10b981;">
+              <i data-lucide="help-circle"></i>
+              <span>Panduan Webhook</span>
+            </button>
+          </div>
+          <div class="gdrive-box-desc">
+            Responden dapat mengunggah berkas apa saja (PDF, Dokumen Word/Excel, Gambar, Video, Arsip ZIP) yang otomatis tersimpan ke Google Drive Anda.
+          </div>
+          <div class="gdrive-box-config">
+            <div class="gdrive-config-item">
+              <label><i data-lucide="file-check"></i> Jenis Berkas Diizinkan:</label>
+              <select class="select-gdrive-allowed input-select-sm">
+                <option value="all" ${allowed === 'all' ? 'selected' : ''}>Semua Jenis Berkas (Bebas)</option>
+                <option value="document" ${allowed === 'document' ? 'selected' : ''}>Dokumen & PDF (.pdf, .docx, .xlsx, .pptx, .txt)</option>
+                <option value="pdf" ${allowed === 'pdf' ? 'selected' : ''}>Hanya Dokumen PDF (.pdf)</option>
+                <option value="image" ${allowed === 'image' ? 'selected' : ''}>Gambar / Foto (.jpg, .png, .webp, .jpeg)</option>
+                <option value="archive" ${allowed === 'archive' ? 'selected' : ''}>Berkas Arsip / ZIP (.zip, .rar, .7z)</option>
+                <option value="media" ${allowed === 'media' ? 'selected' : ''}>Audio & Video (.mp3, .mp4, .wav, .mov)</option>
+              </select>
+            </div>
+            <div class="gdrive-config-item">
+              <label><i data-lucide="database"></i> Batas Ukuran Maksimum:</label>
+              <select class="select-gdrive-size input-select-sm">
+                <option value="5" ${maxSize == 5 ? 'selected' : ''}>5 MB</option>
+                <option value="10" ${maxSize == 10 ? 'selected' : ''}>10 MB</option>
+                <option value="20" ${maxSize == 20 ? 'selected' : ''}>20 MB (Rekomendasi)</option>
+                <option value="50" ${maxSize == 50 ? 'selected' : ''}>50 MB</option>
+                <option value="100" ${maxSize == 100 ? 'selected' : ''}>100 MB</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      `;
     } else if (q.type === 'paragraph') {
       optionsHtml = `<div class="text-preview-box">Teks jawaban panjang / paragraf responden...</div>`;
     } else if (q.type === 'date') {
@@ -682,8 +817,9 @@ class FormBuilder {
             <option value="choice" ${q.type === 'choice' ? 'selected' : ''}>Pilihan Ganda</option>
             <option value="checkbox" ${q.type === 'checkbox' ? 'selected' : ''}>Kotak Centang</option>
             <option value="dropdown" ${q.type === 'dropdown' ? 'selected' : ''}>Dropdown</option>
+            <option value="file_gdrive" ${q.type === 'file_gdrive' ? 'selected' : ''}>📁 Upload Berkas (Google Drive)</option>
+            <option value="file" ${q.type === 'file' ? 'selected' : ''}>📸 Upload Foto / Kamera</option>
             <option value="location" ${q.type === 'location' ? 'selected' : ''}>📍 Lokasi GPS / Koordinat</option>
-            <option value="file" ${q.type === 'file' ? 'selected' : ''}>📸 Upload Foto / Berkas</option>
             <option value="signature" ${q.type === 'signature' ? 'selected' : ''}>✍️ Tanda Tangan Digital</option>
             <option value="rating" ${q.type === 'rating' ? 'selected' : ''}>Rating Bintang</option>
             <option value="date" ${q.type === 'date' ? 'selected' : ''}>Tanggal</option>
@@ -810,8 +946,36 @@ class FormBuilder {
       if (['choice', 'checkbox', 'dropdown'].includes(q.type) && (!q.options || q.options.length === 0)) {
         q.options = ['Opsi 1', 'Opsi 2'];
       }
+      if (q.type === 'file_gdrive') {
+        if (!q.allowedTypes) q.allowedTypes = 'all';
+        if (!q.maxSizeMB) q.maxSizeMB = 20;
+      }
       this.renderQuestions();
     });
+
+    // Google Drive Question Configuration Listeners
+    const selectGdriveAllowed = card.querySelector('.select-gdrive-allowed');
+    if (selectGdriveAllowed) {
+      selectGdriveAllowed.addEventListener('change', (e) => {
+        q.allowedTypes = e.target.value;
+      });
+    }
+
+    const selectGdriveSize = card.querySelector('.select-gdrive-size');
+    if (selectGdriveSize) {
+      selectGdriveSize.addEventListener('change', (e) => {
+        q.maxSizeMB = parseInt(e.target.value, 10) || 20;
+      });
+    }
+
+    const btnCardGdriveGuide = card.querySelector('.btn-card-gdrive-guide');
+    if (btnCardGdriveGuide) {
+      btnCardGdriveGuide.addEventListener('click', () => {
+        if (this.btnOpenGdriveGuide) {
+          this.btnOpenGdriveGuide.click();
+        }
+      });
+    }
 
     const requiredCheck = card.querySelector('.q-required-check');
     requiredCheck.addEventListener('change', (e) => {
@@ -1171,6 +1335,8 @@ class FormBuilder {
       collectEmail: this.collectEmailCheck ? this.collectEmailCheck.checked : false,
       allowMultiple: this.allowMultipleCheck ? this.allowMultipleCheck.checked : true,
       isActive: this.isActiveCheck ? this.isActiveCheck.checked : true,
+      gdriveScriptUrl: this.gdriveScriptUrlInput ? this.gdriveScriptUrlInput.value.trim() : '',
+      gdriveFolderId: this.gdriveFolderIdInput ? this.gdriveFolderIdInput.value.trim() : '',
       sections: this.sections,
       questions: this.questions
     };

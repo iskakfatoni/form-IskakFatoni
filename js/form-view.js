@@ -374,6 +374,61 @@ class FormViewer {
           <input type="hidden" name="${qName}" class="input-gps-hidden" value="">
         </div>
       `;
+    } else if (q.type === 'file_gdrive') {
+      const allowed = q.allowedTypes || 'all';
+      const maxSizeMB = q.maxSizeMB || 20;
+      
+      let typeLabel = 'Semua Jenis Berkas';
+      let acceptAttr = '';
+      if (allowed === 'document') {
+        typeLabel = 'Dokumen & PDF (.pdf, .docx, .xlsx, .pptx, .txt)';
+        acceptAttr = 'accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"';
+      } else if (allowed === 'pdf') {
+        typeLabel = 'Dokumen PDF (.pdf)';
+        acceptAttr = 'accept=".pdf,application/pdf"';
+      } else if (allowed === 'image') {
+        typeLabel = 'Gambar / Foto (.jpg, .png, .webp, .jpeg)';
+        acceptAttr = 'accept="image/*"';
+      } else if (allowed === 'archive') {
+        typeLabel = 'Berkas Arsip / ZIP (.zip, .rar, .7z)';
+        acceptAttr = 'accept=".zip,.rar,.7z,.tar,.gz"';
+      } else if (allowed === 'media') {
+        typeLabel = 'Audio & Video (.mp3, .mp4, .wav, .mov)';
+        acceptAttr = 'accept="audio/*,video/*"';
+      }
+
+      inputHtml = `
+        <div class="live-gdrive-uploader" data-question-id="${q.id}">
+          <div class="gdrive-dropzone-box" id="gdrive-dropzone-${q.id}">
+            <div class="gdrive-dropzone-icon-wrap">
+              <i data-lucide="hard-drive" class="gdrive-dropzone-icon"></i>
+            </div>
+            <div class="gdrive-dropzone-label">Pilih atau Tarik Berkas ke Sini</div>
+            <div class="gdrive-dropzone-sub">
+              <span class="gdrive-type-badge">${this.escapeHtml(typeLabel)}</span>
+              <span class="gdrive-size-badge">Maks ${maxSizeMB} MB</span>
+            </div>
+            <input type="file" class="input-gdrive-file" ${acceptAttr} style="display:none;">
+          </div>
+
+          <div class="gdrive-file-preview hidden" id="gdrive-preview-${q.id}">
+            <div class="gdrive-preview-left">
+              <div class="gdrive-file-icon">
+                <i data-lucide="file-check"></i>
+              </div>
+              <div class="gdrive-file-meta">
+                <strong class="gdrive-file-name">-</strong>
+                <span class="gdrive-file-size">-</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-ghost btn-xs text-danger btn-remove-gdrive-file" title="Hapus Berkas">
+              <i data-lucide="trash-2"></i>
+              <span>Hapus</span>
+            </button>
+          </div>
+          <input type="hidden" name="${qName}" class="input-gdrive-hidden" value="">
+        </div>
+      `;
     } else if (q.type === 'file') {
       inputHtml = `
         <div class="live-file-uploader" data-question-id="${q.id}">
@@ -451,6 +506,106 @@ class FormViewer {
       </div>
       <div class="error-msg">Pertanyaan ini wajib diisi.</div>
     `;
+
+    // Google Drive File Uploader Handler
+    if (q.type === 'file_gdrive') {
+      const dropzone = card.querySelector('.gdrive-dropzone-box');
+      const fileInput = card.querySelector('.input-gdrive-file');
+      const previewCard = card.querySelector('.gdrive-file-preview');
+      const fileNameEl = card.querySelector('.gdrive-file-name');
+      const fileSizeEl = card.querySelector('.gdrive-file-size');
+      const btnRemove = card.querySelector('.btn-remove-gdrive-file');
+      const hiddenInput = card.querySelector('.input-gdrive-hidden');
+      const maxSizeMB = q.maxSizeMB || 20;
+
+      const processSelectedFile = (file) => {
+        if (!file) return;
+
+        // 1. Validate file size
+        const maxBytes = maxSizeMB * 1024 * 1024;
+        if (file.size > maxBytes) {
+          if (window.app && typeof window.app.showToast === 'function') {
+            window.app.showToast(`Ukuran berkas (${(file.size / (1024 * 1024)).toFixed(1)} MB) melebihi batas maksimum ${maxSizeMB} MB!`, 'error');
+          }
+          if (fileInput) fileInput.value = '';
+          return;
+        }
+
+        // 2. Validate file type if specified
+        const allowed = q.allowedTypes || 'all';
+        if (allowed === 'pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+          window.app.showToast('Hanya berkas format PDF (.pdf) yang diizinkan!', 'error');
+          if (fileInput) fileInput.value = '';
+          return;
+        }
+
+        // Store file object in memory ready for upload
+        if (!this.pendingGdriveFiles) this.pendingGdriveFiles = {};
+        this.pendingGdriveFiles[q.id] = file;
+        this.answers[q.id] = {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          pending: true
+        };
+
+        if (fileNameEl) fileNameEl.textContent = file.name;
+        if (fileSizeEl) {
+          const sizeStr = file.size > 1024 * 1024
+            ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+            : `${(file.size / 1024).toFixed(0)} KB`;
+          fileSizeEl.textContent = `${sizeStr} • Siap diunggah`;
+        }
+        if (hiddenInput) hiddenInput.value = file.name;
+
+        if (dropzone) dropzone.classList.add('hidden');
+        if (previewCard) previewCard.classList.remove('hidden');
+        card.classList.remove('has-error');
+
+        if (window.app && typeof window.app.showToast === 'function') {
+          window.app.showToast(`Berkas "${file.name}" berhasil dipilih!`, 'success');
+        }
+        if (window.lucide) window.lucide.createIcons();
+      };
+
+      if (dropzone && fileInput) {
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        dropzone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropzone.classList.add('drag-over');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+          dropzone.classList.remove('drag-over');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropzone.classList.remove('drag-over');
+          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            processSelectedFile(e.dataTransfer.files[0]);
+          }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files[0]) {
+            processSelectedFile(e.target.files[0]);
+          }
+        });
+      }
+
+      if (btnRemove) {
+        btnRemove.addEventListener('click', () => {
+          if (this.pendingGdriveFiles) delete this.pendingGdriveFiles[q.id];
+          delete this.answers[q.id];
+          if (hiddenInput) hiddenInput.value = '';
+          if (fileInput) fileInput.value = '';
+          if (previewCard) previewCard.classList.add('hidden');
+          if (dropzone) dropzone.classList.remove('hidden');
+        });
+      }
+    }
 
     // File / Photo Upload Handler
     if (q.type === 'file') {
@@ -753,6 +908,23 @@ class FormViewer {
           if (btnDetect) btnDetect.classList.add('hidden');
           if (window.lucide) window.lucide.createIcons();
         }
+      } else if (q.type === 'file_gdrive') {
+        const previewCard = qCard.querySelector('.gdrive-file-preview');
+        const dropzone = qCard.querySelector('.gdrive-dropzone-box');
+        const fileNameEl = qCard.querySelector('.gdrive-file-name');
+        const fileSizeEl = qCard.querySelector('.gdrive-file-size');
+        const hiddenInput = qCard.querySelector('.input-gdrive-hidden');
+
+        if (savedVal) {
+          const name = typeof savedVal === 'object' ? (savedVal.name || savedVal.fileName || 'Berkas Terlampir') : String(savedVal);
+          const size = typeof savedVal === 'object' && savedVal.size ? `${(savedVal.size / 1024).toFixed(0)} KB` : 'Siap';
+          if (fileNameEl) fileNameEl.textContent = name;
+          if (fileSizeEl) fileSizeEl.textContent = `${size} • Terlampir`;
+          if (hiddenInput) hiddenInput.value = name;
+          if (previewCard) previewCard.classList.remove('hidden');
+          if (dropzone) dropzone.classList.add('hidden');
+          if (window.lucide) window.lucide.createIcons();
+        }
       } else if (q.type === 'file') {
         const previewCard = qCard.querySelector('.file-preview-card');
         const dropzone = qCard.querySelector('.file-dropzone-box');
@@ -991,8 +1163,42 @@ class FormViewer {
     btnSubmit.innerHTML = '<span>Mengirim tanggapan...</span>';
 
     try {
+      // 1. Upload any pending Google Drive files
+      if (this.pendingGdriveFiles && Object.keys(this.pendingGdriveFiles).length > 0) {
+        const gdriveKeys = Object.keys(this.pendingGdriveFiles);
+        btnSubmit.innerHTML = `<span class="pulse-dot" style="display:inline-block; width:8px; height:8px; background:#10b981; border-radius:50%; margin-right:6px;"></span><span>Mengunggah berkas ke Google Drive (${gdriveKeys.length} berkas)...</span>`;
+        
+        for (const qId of gdriveKeys) {
+          const file = this.pendingGdriveFiles[qId];
+          if (file) {
+            try {
+              const qObj = (this.currentForm.questions || []).find(item => item.id === qId);
+              const result = await window.gdriveUploader.uploadToGoogleDrive(file, {
+                scriptUrl: this.currentForm.gdriveScriptUrl || '',
+                folderId: this.currentForm.gdriveFolderId || '',
+                formId: this.currentForm.id,
+                questionTitle: qObj ? qObj.title : 'File'
+              });
+              this.answers[qId] = {
+                name: result.name || file.name,
+                size: result.size || file.size,
+                type: result.type || file.type,
+                url: result.url,
+                storage: result.storage
+              };
+            } catch (errUpload) {
+              console.error('GDrive upload error:', errUpload);
+            }
+          }
+        }
+      }
+
+      // 2. Submit to Firebase / Storage
       await window.formStorage.submitResponse(this.currentForm.id, this.answers, this.respondentEmail);
       
+      // Clear pending files
+      this.pendingGdriveFiles = {};
+
       // Show success screen
       this.formElement.classList.add('hidden');
       this.successCard.classList.remove('hidden');
@@ -1064,6 +1270,23 @@ class FormViewer {
               <div><strong>Koordinat GPS:</strong> ${val.lat.toFixed(6)}, ${val.lng.toFixed(6)}</div>
               <div style="font-size: 12px; color: #10b981;">Akurasi Satelit: ± ${Math.round(val.accuracy || 0)} meter</div>
               <div style="font-size: 11px; color: #3b82f6; margin-top: 2px;">Tautan Peta: https://www.google.com/maps?q=${val.lat},${val.lng}</div>
+            </td>
+          </tr>
+        `;
+      } else if (q.type === 'file_gdrive') {
+        let fileObj = val;
+        if (typeof fileObj === 'string' && fileObj.startsWith('{')) {
+          try { fileObj = JSON.parse(fileObj); } catch(e){}
+        }
+        let url = typeof fileObj === 'object' ? (fileObj.url || fileObj.viewUrl || '') : (String(fileObj).startsWith('http') ? fileObj : '');
+        let name = typeof fileObj === 'object' ? (fileObj.name || fileObj.fileName || 'Lihat Dokumen di Google Drive') : fileObj;
+        
+        rowsHtml += `
+          <tr>
+            <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 600; width: 35%; background: #f8fafc;">${this.escapeHtml(q.title)}</td>
+            <td style="padding: 8px 12px; border: 1px solid #e2e8f0;">
+              <div>📁 <strong>${this.escapeHtml(name)}</strong></div>
+              ${url ? `<div style="font-size: 11px; color: #2563eb; margin-top: 2px; word-break: break-all;">Link Google Drive: ${this.escapeHtml(url)}</div>` : ''}
             </td>
           </tr>
         `;

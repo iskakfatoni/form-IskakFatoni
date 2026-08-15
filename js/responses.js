@@ -220,6 +220,24 @@ class ResponsesDashboard {
             } else {
               displayVal = this.escapeHtml(String(ans));
             }
+          } else if (q.type === 'file_gdrive') {
+            let fileObj = ans;
+            if (typeof fileObj === 'string' && fileObj.startsWith('{')) {
+              try { fileObj = JSON.parse(fileObj); } catch(e){}
+            }
+            let url = typeof fileObj === 'object' ? (fileObj.url || fileObj.viewUrl || '') : (String(fileObj).startsWith('http') ? fileObj : '');
+            let name = typeof fileObj === 'object' ? (fileObj.name || fileObj.fileName || 'Berkas Google Drive') : String(fileObj);
+            
+            if (url) {
+              displayVal = `
+                <a href="${this.escapeHtml(url)}" target="_blank" class="btn btn-secondary btn-xs" style="color: #10b981; border-color: rgba(16, 185, 129, 0.3); font-weight: 500;" title="Buka berkas di Google Drive (${this.escapeHtml(name)})">
+                  <i data-lucide="hard-drive" style="width:13px; height:13px;"></i>
+                  <span>${this.escapeHtml(name.length > 20 ? name.substring(0, 18) + '...' : name)}</span>
+                </a>
+              `;
+            } else {
+              displayVal = `📁 ${this.escapeHtml(name)}`;
+            }
           } else if (q.type === 'file') {
             displayVal = `
               <a href="${this.escapeHtml(String(ans))}" target="_blank" class="btn btn-ghost btn-xs" style="color: var(--primary); text-decoration: underline;" title="Buka / Unduh Foto">

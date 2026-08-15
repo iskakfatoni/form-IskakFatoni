@@ -806,5 +806,137 @@ body.responder-mode .container {
   }
 }
 
+/* Google Drive File Uploader in Live Form */
+.live-gdrive-uploader {
+  width: 100%;
+}
+
+.gdrive-dropzone-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  border-radius: var(--radius-md);
+  background: rgba(16, 185, 129, 0.05);
+  border: 2px dashed rgba(16, 185, 129, 0.4);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+  gap: 6px;
+}
+
+.gdrive-dropzone-box:hover, .gdrive-dropzone-box.drag-over {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: #10b981;
+  transform: translateY(-2px);
+}
+
+.gdrive-dropzone-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #10b981;
+  margin-bottom: 2px;
+}
+
+.gdrive-dropzone-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.gdrive-dropzone-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.gdrive-dropzone-sub {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.gdrive-type-badge {
+  font-size: 0.76rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  font-weight: 500;
+}
+
+.gdrive-size-badge {
+  font-size: 0.76rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.gdrive-file-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  gap: 12px;
+}
+
+.gdrive-preview-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.gdrive-file-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: #10b981;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gdrive-file-icon i {
+  width: 18px;
+  height: 18px;
+}
+
+.gdrive-file-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.gdrive-file-name {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gdrive-file-size {
+  font-size: 0.78rem;
+  color: #10b981;
+  font-weight: 500;
+}
+
 
 
