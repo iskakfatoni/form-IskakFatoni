@@ -376,7 +376,7 @@ class FormViewer {
       `;
     } else if (q.type === 'file_gdrive') {
       const allowed = q.allowedTypes || 'all';
-      const maxSizeMB = q.maxSizeMB || 20;
+      const maxSizeMB = q.maxSizeMB || 50;
       
       let typeLabel = 'Semua Jenis Berkas';
       let acceptAttr = '';
@@ -516,7 +516,7 @@ class FormViewer {
       const fileSizeEl = card.querySelector('.gdrive-file-size');
       const btnRemove = card.querySelector('.btn-remove-gdrive-file');
       const hiddenInput = card.querySelector('.input-gdrive-hidden');
-      const maxSizeMB = q.maxSizeMB || 20;
+      const maxSizeMB = q.maxSizeMB || 50;
 
       const processSelectedFile = (file) => {
         if (!file) return;

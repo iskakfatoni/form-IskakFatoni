@@ -757,7 +757,7 @@ class FormBuilder {
       `;
     } else if (q.type === 'file_gdrive') {
       const allowed = q.allowedTypes || 'all';
-      const maxSize = q.maxSizeMB || 20;
+      const maxSize = q.maxSizeMB || 50;
       optionsHtml = `
         <div class="gdrive-preview-box">
           <div class="gdrive-box-header">
@@ -790,8 +790,8 @@ class FormBuilder {
               <select class="select-gdrive-size input-select-sm">
                 <option value="5" ${maxSize == 5 ? 'selected' : ''}>5 MB</option>
                 <option value="10" ${maxSize == 10 ? 'selected' : ''}>10 MB</option>
-                <option value="20" ${maxSize == 20 ? 'selected' : ''}>20 MB (Rekomendasi)</option>
-                <option value="50" ${maxSize == 50 ? 'selected' : ''}>50 MB</option>
+                <option value="20" ${maxSize == 20 ? 'selected' : ''}>20 MB</option>
+                <option value="50" ${maxSize == 50 ? 'selected' : ''}>50 MB (Bawaan)</option>
                 <option value="100" ${maxSize == 100 ? 'selected' : ''}>100 MB</option>
               </select>
             </div>
@@ -962,7 +962,7 @@ class FormBuilder {
       }
       if (q.type === 'file_gdrive') {
         if (!q.allowedTypes) q.allowedTypes = 'all';
-        if (!q.maxSizeMB) q.maxSizeMB = 20;
+        if (!q.maxSizeMB) q.maxSizeMB = 50;
       }
       this.renderQuestions();
     });
@@ -978,7 +978,7 @@ class FormBuilder {
     const selectGdriveSize = card.querySelector('.select-gdrive-size');
     if (selectGdriveSize) {
       selectGdriveSize.addEventListener('change', (e) => {
-        q.maxSizeMB = parseInt(e.target.value, 10) || 20;
+        q.maxSizeMB = parseInt(e.target.value, 10) || 50;
       });
     }
 
