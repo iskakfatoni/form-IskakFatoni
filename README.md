@@ -7,25 +7,33 @@
 ## ✨ Fitur Utama
 
 - **🎨 Modern & Responsive UI**: Antarmuka berbasis *Glassmorphism* dengan tema Gelap (Dark Mode) dan Terang (Light Mode), tipografi modern (*Inter & Outfit*), serta animasi mikro yang halus.
-- **🛠️ Form Builder Dinamis**:
-  - Tipe pertanyaan lengkap: **Teks Singkat, Paragraf, Pilihan Ganda (Radio), Kotak Centang (Checkboxes), Dropdown, Rating Bintang (1-5), Tanggal, Waktu, dan Angka**.
+- **🛠️ Form Builder Dinamis & Canggih**:
+  - Tipe pertanyaan lengkap: **Teks Singkat, Paragraf, Pilihan Ganda (Radio), Kotak Centang (Checkboxes), Dropdown, Rating Bintang (1-5), Skala Linier (1-5 / 1-10), Tanggal, Waktu, dan Angka**.
+  - **Kamera & Upload Foto**: Ambil foto langsung dari kamera perangkat atau unggah berkas dengan auto-kompresi gambar.
+  - **Tanda Tangan Digital (Signature Pad)**: Kanvas tanda tangan digital interaktif langsung di peramban.
+  - **Perekam Lokasi GPS**: Mengambil koordinat GPS presisi tinggi dengan tombol pratinjau peta.
+  - **Conditional Section Branching**: Logika lompat ke bagian tertentu atau langsung kirim berdasarkan opsi jawaban responden.
+  - **Custom Banner Header**: Unggah banner kustom dengan kompresi otomatis dan *live preview*.
   - Atur pertanyaan wajib (*Required*), duplikasi pertanyaan, pindah posisi (*reorder*), dan hapus.
-  - Kustomisasi warna tema formulir dan gambar banner header.
+  - Pengaturan formulir: Batas waktu penutupan (*deadline*), batasan kuota respon, password akses, dan toggle terima respon.
 - **📋 Form Viewer / Responden**:
-  - Tampilan pengisian responsif untuk desktop dan smartphone.
+  - Tampilan pengisian *multi-step section* responsif untuk desktop dan smartphone.
   - Validasi formulir realtime.
+  - **Cetak Bukti Registrasi / Struk Resmi (PDF & Print)**: Cetak tanda terima resmi setelah mengirim formulir.
+  - **Modal Share**: Generator QR Code & tombol berbagi langsung ke WhatsApp.
   - Halaman konfirmasi terkirim (*Thank You screen*) yang dapat dikustomisasi.
 - **📊 Responses Dashboard & Analitik**:
-  - Ringkasan total responden, tanggal submit terakhir, dan status formulir.
-  - Tabel data respon interaktif dengan fitur pencarian.
-- **📥 Export ke Excel (.xlsx)**:
-  - Ekspor seluruh respon formulir langsung ke berkas Excel `.xlsx` dalam satu klik menggunakan SheetJS.
+  - Ringkasan total responden, statistik interaktif, dan status formulir.
+  - Tabel data respon interaktif dengan fitur pencarian dan tampilan detail responden.
+- **📥 Export ke Excel (.xlsx) & CSV**:
+  - Ekspor seluruh respon formulir langsung ke berkas Excel `.xlsx` dalam satu klik menggunakan SheetJS dan format CSV.
   - Penyesuaian otomatis lebar kolom dan format tanggal Indonesia.
-- **🔥 Firebase Cloud Firestore Realtime**:
-  - Data formulir dan respon tersimpan di cloud secara aman.
-  - Dilengkapi *Mode Demo Lokal (LocalStorage)* otomatis jika Firebase belum diatur.
+- **🔥 Firebase Cloud Firestore & Storage Realtime**:
+  - Data formulir dan respon tersimpan di cloud secara aman dengan fallback otomatis ke *LocalStorage* & kompresi *Base64 dataURL* jika offline/timeout.
 - **🌐 100% Siap untuk GitHub Pages**:
-  - Arsitektur Single Page Application (SPA) dengan *Hash Router* (`#/builder/...`, `#/view/...`, `#/responses/...`) sehingga tidak ada isu error 404 saat halaman di-refresh di GitHub Pages.
+  - Arsitektur Single Page Application (SPA) dengan otomatisasi CI/CD deploy & *cache-busting* otomatis.
+
+> 💡 *Detail dokumentasi arsitektur dan riwayat progres lengkap dapat dilihat di [PROJECT_MEMORY.md](PROJECT_MEMORY.md).*
 
 ---
 
