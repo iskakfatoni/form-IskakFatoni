@@ -2,35 +2,45 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Helper function to check if request is from an authenticated user
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
     // ==========================================
     // KOLEKSI FORMULIR (FORMS)
     // ==========================================
     match /forms/{formId} {
-      // Siapapun dapat melihat/membaca form yang ada untuk mengisi respon
+      // 1. Publik / Responden BISA membaca formulir untuk mengisi form
       allow read: if true;
       
-      // Mengizinkan pembuatan atau pengeditan form dengan validasi struktur data dasar
-      allow create, update: if request.resource.data.title is string
-                            && request.resource.data.title.size() > 0
-                            && request.resource.data.title.size() <= 200;
-                            
-      // Menghindari penghapusan tidak sengaja dari publik (atau izinkan hanya untuk formId yang sesuai)
-      allow delete: if true;
+      // 2. Pembuatan form baru: Harus user login dan mencantumkan judul yang valid
+      allow create: if isAuthenticated()
+                    && request.resource.data.title is string
+                    && request.resource.data.title.size() > 0
+                    && request.resource.data.title.size() <= 200;
+                    
+      // 3. Update & Delete: Diizinkan jika user adalah pemilik form (ownerUid) atau legacy form
+      allow update, delete: if isAuthenticated() && (
+        !('ownerUid' in resource.data) ||
+        resource.data.ownerUid == request.auth.uid ||
+        request.auth.token.email == 'iskakfatoni@gmail.com'
+      );
     }
     
     // ==========================================
     // KOLEKSI TANGGAPAN / RESPON (RESPONSES)
     // ==========================================
     match /responses/{responseId} {
-      // Siapapun yang mengisi form BISA MENGIRIM TANGGAPAN BARU (Create)
+      // 1. Siapapun yang mengisi form BISA MENGIRIM TANGGAPAN BARU (Create)
       allow create: if request.resource.data.formId is string
                     && request.resource.data.answers is map;
       
-      // Membaca tanggapan untuk tampilan dashboard & export Excel
-      allow read: if true;
+      // 2. Membaca & Menghapus tanggapan: Diizinkan untuk user terautentikasi (pengelola form)
+      allow read, delete: if isAuthenticated();
       
-      // Memperbarui atau menghapus tanggapan
-      allow update, delete: if true;
+      // 3. Update respon jika diperlukan
+      allow update: if isAuthenticated();
     }
   }
 }

@@ -1,5 +1,5 @@
 /**
- * FORMCRAFT - Unified Storage & Data Layer
+ * FORMCRAFT - Unified Storage & Data Layer with Multi-User Isolation
  * Provides CRUD operations for Forms and Responses across Firestore & LocalStorage fallback.
  */
 
@@ -19,22 +19,59 @@ class FormStorage {
     return window.firebaseManager.db;
   }
 
+  getCurrentUser() {
+    return window.authManager ? window.authManager.getCurrentUser() : null;
+  }
+
   // --- FORMS CRUD ---
 
   async getAllForms() {
-    if (this.isCloud) {
+    const user = this.getCurrentUser();
+    const userUid = user ? user.uid : null;
+    const isSuperAdmin = user && window.authManager && window.authManager.isAdmin(user.email);
+
+    if (this.isCloud && userUid) {
       try {
-        const snapshot = await this.db.collection('forms').orderBy('updatedAt', 'desc').get();
-        const forms = [];
+        let forms = [];
+
+        // 1. Fetch user's own forms
+        const snapshot = await this.db.collection('forms')
+          .where('ownerUid', '==', userUid)
+          .get();
+
         snapshot.forEach(doc => {
           forms.push({ id: doc.id, ...doc.data() });
         });
+
+        // 2. If Super Admin (iskakfatoni@gmail.com), also load legacy forms without ownerUid
+        if (isSuperAdmin) {
+          try {
+            const allSnap = await this.db.collection('forms').get();
+            allSnap.forEach(doc => {
+              const data = doc.data();
+              if (!data.ownerUid && !forms.some(f => f.id === doc.id)) {
+                forms.push({ id: doc.id, ...data });
+              }
+            });
+          } catch (legacyErr) {
+            console.warn('Superadmin legacy fetch note:', legacyErr);
+          }
+        }
+
+        // Sort descending by updatedAt
+        forms.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
         return forms;
       } catch (err) {
         console.warn('Firestore fetch failed, fallback to local:', err);
       }
     }
-    return this.getLocalForms();
+
+    // Local fallback
+    const allLocal = this.getLocalForms();
+    if (userUid) {
+      return allLocal.filter(f => f.ownerUid === userUid || (!f.ownerUid && isSuperAdmin));
+    }
+    return allLocal;
   }
 
   async getFormById(id) {
@@ -55,10 +92,14 @@ class FormStorage {
   async saveForm(formData) {
     const timestamp = new Date().toISOString();
     const id = formData.id || 'form_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    const user = this.getCurrentUser();
     
     const record = {
       ...formData,
       id,
+      ownerUid: formData.ownerUid || (user ? user.uid : 'anonymous'),
+      ownerEmail: formData.ownerEmail || (user ? user.email : ''),
+      ownerName: formData.ownerName || (user ? user.name : ''),
       updatedAt: timestamp,
       createdAt: formData.createdAt || timestamp
     };
@@ -234,6 +275,7 @@ class FormStorage {
     if (!existing || existing.length === 0) {
       const sampleForm = {
         id: 'sample_customer_feedback',
+        ownerUid: 'sample_seed',
         title: 'Survei Kepuasan Pengguna & Layanan',
         description: 'Mohon luangkan waktu 2 menit untuk mengisi survei ini guna meningkatkan kualitas produk kami.',
         themeColor: '#6366f1',

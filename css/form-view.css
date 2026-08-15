@@ -938,5 +938,189 @@ body.responder-mode .container {
   font-weight: 500;
 }
 
+/* ==========================================================================
+   MOBILE PHONE OPTIMIZATIONS (<= 640px)
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  body.responder-mode .container {
+    padding: 12px 10px 40px;
+  }
+
+  .form-viewer-container {
+    margin: 8px auto 40px;
+  }
+
+  .form-live-wrapper {
+    gap: 14px;
+  }
+
+  /* Header Card Mobile */
+  .form-live-header {
+    padding: 20px 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .live-banner-img {
+    width: calc(100% + 32px);
+    margin: -20px -16px 16px -16px;
+    height: 130px;
+  }
+
+  .live-header-text h1 {
+    font-size: 1.45rem;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+
+  .live-header-text p {
+    font-size: 0.92rem;
+    margin-bottom: 12px;
+  }
+
+  /* Question Cards Mobile */
+  .live-question-card {
+    padding: 18px 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .live-q-title {
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  /* Mobile Inputs: Minimum 16px font-size to prevent automatic iOS Safari zoom */
+  .live-input-text,
+  .live-input-textarea,
+  .live-select {
+    font-size: 16px !important;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Choice / Radio / Checkbox Labels (Touch Target) */
+  .live-choice-label {
+    padding: 12px 14px;
+    font-size: 0.94rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .live-opt-img-box {
+    width: 46px;
+    height: 46px;
+  }
+
+  /* Star Rating Mobile */
+  .live-rating-group {
+    justify-content: flex-start;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .rating-star-btn svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Section Progress Bar */
+  .section-progress-wrap {
+    padding: 12px 16px;
+  }
+
+  .live-section-header-card {
+    padding: 18px 16px;
+  }
+
+  .live-sec-title {
+    font-size: 1.2rem;
+  }
+
+  /* GPS / Location Mobile */
+  .location-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-detect-gps {
+    justify-content: center;
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .location-result-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+
+  .location-map-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* Signature Canvas Mobile */
+  .signature-pad-box {
+    max-width: 100%;
+    height: 150px;
+  }
+
+  .signature-actions-row {
+    max-width: 100%;
+  }
+
+  /* Google Drive & File Upload Mobile */
+  .gdrive-dropzone-box,
+  .file-dropzone-box {
+    padding: 20px 14px;
+  }
+
+  .gdrive-dropzone-label,
+  .file-dropzone-label {
+    font-size: 0.9rem;
+  }
+
+  /* Navigation Buttons Bottom */
+  .form-submit-section {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .step-nav-buttons {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+  }
+
+  .step-nav-buttons .btn,
+  .form-submit-section .btn {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+
+  /* Success Card Mobile */
+  .form-success-card {
+    padding: 40px 18px;
+  }
+
+  .form-success-card h2 {
+    font-size: 1.45rem;
+  }
+
+  .success-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .success-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 
 

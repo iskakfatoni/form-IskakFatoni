@@ -65,11 +65,11 @@
 
       <div class="nav-actions">
         <!-- Auth Status / Action Pill -->
-        <button id="nav-user-auth-pill" class="user-auth-pill logged-out" title="Klik untuk Masuk">
+        <button id="nav-user-auth-pill" class="user-auth-pill logged-out" title="Masuk atau Keluar Akun">
           <span id="nav-user-auth-avatar" class="nav-avatar-icon">
             <i data-lucide="log-in"></i>
           </span>
-          <span id="nav-user-auth-name" class="nav-user-name">Masuk Admin</span>
+          <span id="nav-user-auth-name" class="nav-user-name">Masuk / Daftar</span>
         </button>
 
         <button id="btn-theme-toggle" class="icon-btn" title="Ganti Tema (Gelap/Terang)">
@@ -125,16 +125,28 @@
         <!-- Right Hero Authentication Card -->
         <div id="hero-auth-container" class="hero-auth-container glass-card">
           
-          <!-- State 1: Logged Out Card (Admin Login Portal) -->
+          <!-- State 1: Logged Out Card (Login & Register Portal) -->
           <div id="hero-auth-logged-out" class="hero-auth-box">
             <div class="auth-box-header">
               <div class="auth-icon-badge">
-                <i data-lucide="shield-check"></i>
+                <i data-lucide="user-check"></i>
               </div>
               <div>
-                <h3 class="auth-box-title">Akses Admin (Iskak Fatoni)</h3>
-                <p class="auth-box-subtitle">Masuk untuk mengelola formulir & respon</p>
+                <h3 class="auth-box-title">Portal Akun & Workspace</h3>
+                <p class="auth-box-subtitle">Masuk atau daftar untuk mengelola formulir Anda</p>
               </div>
+            </div>
+
+            <!-- Tab Switcher (Masuk vs Daftar) -->
+            <div class="auth-tabs">
+              <button type="button" id="tab-auth-login" class="auth-tab-btn active">
+                <i data-lucide="log-in"></i>
+                <span>Masuk (Login)</span>
+              </button>
+              <button type="button" id="tab-auth-register" class="auth-tab-btn">
+                <i data-lucide="user-plus"></i>
+                <span>Daftar Akun</span>
+              </button>
             </div>
 
             <!-- Google Login Button -->
@@ -145,19 +157,19 @@
                 <path fill="#FBBC05" d="M5.58 14.83c-.23-.69-.36-1.42-.36-2.18s.13-1.49.36-2.18L1.87 7.59C1.1 9.13.67 10.86.67 12.65s.43 3.52 1.2 5.06l3.71-2.88z"/>
                 <path fill="#34A853" d="M12 23.65c3.24 0 5.95-1.08 7.93-2.93l-3.71-2.88c-1.07.72-2.44 1.15-4.22 1.15-3.01 0-5.54-2.23-6.42-5.17L1.87 16.7C3.73 20.44 7.52 23.65 12 23.65z"/>
               </svg>
-              <span>Masuk dengan Google</span>
+              <span>Lanjut dengan Google</span>
             </button>
 
             <div class="auth-divider">
-              <span>atau Masuk dengan Kata Sandi</span>
+              <span>atau gunakan Email & Sandi</span>
             </div>
 
-            <!-- Firebase Email & Password Auth Form -->
+            <!-- Form 1: Firebase Email & Password LOGIN Form -->
             <form id="hero-email-login-form" class="auth-email-form">
               <div class="auth-input-group">
                 <div class="auth-field-wrap">
                   <i data-lucide="mail" class="input-icon"></i>
-                  <input type="email" id="auth-email-input" class="input-text auth-input" value="iskakfatoni@gmail.com" readonly required style="opacity: 0.9; cursor: default;">
+                  <input type="email" id="auth-email-input" class="input-text auth-input" placeholder="Masukkan alamat email Anda..." autocomplete="email" required>
                 </div>
                 <div class="auth-field-wrap">
                   <i data-lucide="lock" class="input-icon"></i>
@@ -168,10 +180,36 @@
               <div class="auth-submit-row">
                 <button type="submit" id="btn-auth-submit" class="btn btn-primary btn-block">
                   <i data-lucide="log-in" id="auth-submit-icon"></i>
-                  <span id="auth-submit-label">Masuk ke Form Builder</span>
+                  <span id="auth-submit-label">Masuk ke Workspace</span>
                 </button>
               </div>
             </form>
+
+            <!-- Form 2: Firebase Email & Password REGISTER Form -->
+            <form id="hero-email-register-form" class="auth-email-form hidden">
+              <div class="auth-input-group">
+                <div class="auth-field-wrap">
+                  <i data-lucide="user" class="input-icon"></i>
+                  <input type="text" id="reg-name-input" class="input-text auth-input" placeholder="Nama Lengkap Anda..." autocomplete="name" required>
+                </div>
+                <div class="auth-field-wrap">
+                  <i data-lucide="mail" class="input-icon"></i>
+                  <input type="email" id="reg-email-input" class="input-text auth-input" placeholder="Alamat Email Baru..." autocomplete="email" required>
+                </div>
+                <div class="auth-field-wrap">
+                  <i data-lucide="lock" class="input-icon"></i>
+                  <input type="password" id="reg-password-input" class="input-text auth-input" placeholder="Buat Kata Sandi (min. 6 karakter)..." minlength="6" autocomplete="new-password" required>
+                </div>
+              </div>
+
+              <div class="auth-submit-row">
+                <button type="submit" id="btn-register-submit" class="btn btn-primary btn-block">
+                  <i data-lucide="user-plus" id="register-submit-icon"></i>
+                  <span id="register-submit-label">Buat Akun Baru</span>
+                </button>
+              </div>
+            </form>
+
           </div>
 
           <!-- State 2: Logged In Card -->
@@ -179,15 +217,15 @@
             <div class="auth-profile-card">
               <div class="auth-profile-top">
                 <div id="hero-user-avatar" class="hero-user-avatar">
-                  <i data-lucide="shield-check"></i>
+                  <i data-lucide="user"></i>
                 </div>
                 <div class="hero-user-info">
                   <div class="verified-badge">
                     <span class="pulse-dot"></span>
-                    <span>Admin Terverifikasi</span>
+                    <span id="hero-user-role">Kreator Terverifikasi</span>
                   </div>
-                  <h3 id="hero-user-name" class="hero-user-name">Pengelola Form</h3>
-                  <p id="hero-user-email" class="hero-user-email">admin@gmail.com</p>
+                  <h3 id="hero-user-name" class="hero-user-name">Pengguna</h3>
+                  <p id="hero-user-email" class="hero-user-email">user@gmail.com</p>
                 </div>
               </div>
 
