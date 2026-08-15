@@ -101,7 +101,11 @@ function doGet(e) {
   async uploadToGoogleDrive(file, options = {}) {
     if (!file) throw new Error('Berkas tidak ditemukan');
 
-    const scriptUrl = (options.scriptUrl || '').trim();
+    let scriptUrl = (options.scriptUrl || '').trim();
+    if (scriptUrl && !scriptUrl.startsWith('http')) {
+      // Auto-convert raw Deployment ID to full Apps Script Web App URL
+      scriptUrl = `https://script.google.com/macros/s/${scriptUrl}/exec`;
+    }
     const folderId = (options.folderId || '').trim();
 
     // If scriptUrl is provided, attempt Google Apps Script upload

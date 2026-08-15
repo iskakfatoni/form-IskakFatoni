@@ -265,13 +265,26 @@ class FormBuilder {
 
     // Test Google Drive Webhook URL Button
     if (this.btnTestGdriveUrl && this.gdriveScriptUrlInput) {
+      // Auto-format input when pasting deployment ID
+      this.gdriveScriptUrlInput.addEventListener('blur', () => {
+        let val = this.gdriveScriptUrlInput.value.trim();
+        if (val && !val.startsWith('http')) {
+          this.gdriveScriptUrlInput.value = `https://script.google.com/macros/s/${val}/exec`;
+        }
+      });
+
       this.btnTestGdriveUrl.addEventListener('click', async () => {
-        const url = this.gdriveScriptUrlInput.value.trim();
+        let url = this.gdriveScriptUrlInput.value.trim();
         if (!url) {
           if (window.app && typeof window.app.showToast === 'function') {
             window.app.showToast('Harap masukkan URL Google Apps Script Web App terlebih dahulu', 'error');
           }
           return;
+        }
+
+        if (!url.startsWith('http')) {
+          url = `https://script.google.com/macros/s/${url}/exec`;
+          this.gdriveScriptUrlInput.value = url;
         }
 
         if (!url.startsWith('https://script.google.com/macros/s/')) {
